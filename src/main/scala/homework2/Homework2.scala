@@ -85,3 +85,38 @@ final case class Square(x: Double, y: Double, side: Double) extends Shape {
   def move (dx: Double, dy: Double) = Square(x + dx, y + dy, side)
   def describeShape: String = s"x = $x, y = $y, side = $side"
 }
+
+//          |\ 
+//  sideC  |  \  sideB 
+//        |____\
+//   (x,y) sideA
+// 
+// sideA is always horizontal (every point on sideA line has the same y value)
+final case class Triangle(x: Double, y: Double, sideA: Double, sideB: Double, sideC: Double) extends Shape {
+  require(
+    sideA + sideB > sideC && sideB + sideC > sideA && sideA + sideC > sideB, 
+    "the triangle is non-existent")
+  require(
+    sideA > 0 && sideB > 0 && sideC > 0,
+    "sides should be greater than 0")
+
+  def point1: Point = Point(x, y)
+  def point2: Point = Point(x + sideA, y)
+  def point3: Point = {
+    val x = (sideA * sideA + sideC * sideC - sideB * sideB) / (2 * sideA)
+    val y = scala.math.sqrt(sideC * sideC - x * x)
+
+    Point(x, y)
+  }
+
+  def minX: Double = if (point1.x < point3.x) point1.x else point3.x
+  def maxX: Double = if (point2.x > point3.x) point2.x else point3.x
+  def minY: Double = point1.y
+  def maxY: Double = point3.y
+
+  def move(dx: Double, dy: Double): Shape = Triangle(x + dx, y + dy, sideA, sideB, sideC)
+  def describeShape: String = s"Point1(${point1.describeShape}), " +
+    s"Point2(${point2.describeShape}), Point3(${point3.describeShape}), " +
+    s"sideA = $sideA, sideB = $sideB, sideC = $sideC, " +
+    s"minX = $minX, maxX = $maxX, minY = $minY, maxY = $maxY" 
+}

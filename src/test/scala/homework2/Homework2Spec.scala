@@ -1,6 +1,10 @@
 package homework2
 
 class Homework2Spec extends org.scalatest.FunSuite {
+  val testPrecision = 0.01
+  def ~=(a: Double, b: Double) = 
+    if ((a - b).abs < testPrecision) true else false
+
   /////////////////////////////////
   test("Point.describeShape") {
     assert(
@@ -24,6 +28,14 @@ class Homework2Spec extends org.scalatest.FunSuite {
     assert(
       Square(9, -3, 7).describeShape
         == "x = 9.0, y = -3.0, side = 7.0")
+  }
+
+  test("Triangle.describeShape") {
+    assert(
+      Triangle(0, 0, 3, 4, 5).describeShape
+        == "Point1(x = 0.0, y = 0.0), Point2(x = 3.0, y = 0.0), " +
+          "Point3(x = 3.0, y = 4.0), sideA = 3.0, sideB = 4.0, " +
+          "sideC = 5.0, minX = 0.0, maxX = 3.0, minY = 0.0, maxY = 4.0")
   }
   //////////////////////////////////////////////
   test("Point.move"){
@@ -61,6 +73,15 @@ class Homework2Spec extends org.scalatest.FunSuite {
     assert(
       Square(5, 3, 1).move(0, 0) == Square(5, 3, 1))
   }
+
+  test("Triangle.move"){
+    assert(
+      Triangle(2, 3, 4, 5, 6).move(15, 4) == Triangle(17, 7, 4, 5, 6))
+    assert(
+      Triangle(-5, -3, 67, 34, 55).move(67, -32) == Triangle(62, -35, 67, 34, 55))
+    assert(
+      Triangle(54, -37, 5, 5, 5).move(43, 21) == Triangle(97, -16, 5, 5, 5))
+  }
   //////////////////////////////////////////////
   test("Circle.apply") {
     assertThrows[IllegalArgumentException] {
@@ -96,5 +117,49 @@ class Homework2Spec extends org.scalatest.FunSuite {
     }
     assert(
       Square(9, -6, 10).isInstanceOf[Square])
+  }
+
+  test("Triangle.apply") {
+    assertThrows[IllegalArgumentException] {
+      Triangle(3, 2, 4, 5, 1000000)
+    }
+    assertThrows[IllegalArgumentException] {
+      Triangle(3, 2, 4, 1000000, 2)
+    }
+    assertThrows[IllegalArgumentException] {
+      Triangle(3, 2, 1000000, 5, 7)
+    }
+    assertThrows[IllegalArgumentException] {
+      Triangle(4, 8, -4, 5, 1)
+    }
+    assert(
+      Triangle(9, 7, 3, 4, 5).isInstanceOf[Triangle])
+  }
+  //////////////////////////////////////////////
+  test("Triangle.minX") {
+    assert(
+      ~=(Triangle(0, 0, 3, 4, 5).minX, 0))
+    assert(
+      ~=(Triangle(0, 0, 5, 8.60, 5.38).minX, -2))
+    assert(
+      ~=(Triangle(0, 0, 5, 5.38, 8.60).minX, 0))
+  }
+
+  test("Triangle.maxX") {
+    assert(
+      ~=(Triangle(0, 0, 3, 4, 5).maxX, 3))
+    assert(
+      ~=(Triangle(0, 0, 5, 8.60, 5.38).maxX, 5))
+    assert(
+      ~=(Triangle(0, 0, 5, 5.38, 8.60).maxX, 7))
+  }
+
+  test("Triangle.maxY") {
+    assert(
+      ~=(Triangle(0, 0, 3, 4, 5).maxY, 4))
+    assert(
+      ~=(Triangle(0, 0, 5, 8.60, 5.38).maxY, 5))
+    assert(
+      ~=(Triangle(0, 0, 5, 5.38, 8.60).maxY, 5))
   }
 }
