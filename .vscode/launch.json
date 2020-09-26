@@ -1,0 +1,21 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "homework1",
+            "testClass": "homework1.Homework1Spec"
+        },
+        
+        {
+            "type": "scala",
+            "name": "homework2 ",
+            "request": "launch",
+            "testClass": "homework2.Homework2Spec"
+        }
+    ]
+}

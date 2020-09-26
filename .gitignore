@@ -15,5 +15,6 @@ project/plugins/project/
 # vscode setup specific
 .vscode/*
 !settings.json
+!launch.json
 *metals*
 .bloop
