@@ -16,7 +16,12 @@ package homework2
 // to skip it (leave unimplemented), the primary intent of this
 // exercise is modelling using case classes and traits, and not math.
 
-sealed trait Shape extends Located with Bounded with Movable with Describable with Geometric
+sealed trait Shape
+    extends Located
+    with Bounded
+    with Movable
+    with Describable
+    with Geometric
 
 sealed trait Geometric {
   def perimeter: Double
@@ -35,7 +40,7 @@ sealed trait Bounded {
 }
 
 sealed trait Movable {
-  def move (dx: Double, dy: Double): Movable
+  def move(dx: Double, dy: Double): Movable
 }
 
 sealed trait Describable {
@@ -43,11 +48,12 @@ sealed trait Describable {
 }
 
 final case class Point(x: Double, y: Double) extends Movable with Describable {
-  def move (dx: Double, dy: Double) = Point(x + dx, y + dy)
+  def move(dx: Double, dy: Double) = Point(x + dx, y + dy)
   val describeShape: String = s"x = $x, y = $y"
 }
 
-final case class Circle(centerX: Double, centerY: Double, radius: Double) extends Shape {
+final case class Circle(centerX: Double, centerY: Double, radius: Double)
+    extends Shape {
   require(radius > 0, "radius must be greater than 0")
 
   val position: Point = Point(centerX, centerY)
@@ -56,14 +62,16 @@ final case class Circle(centerX: Double, centerY: Double, radius: Double) extend
   val minY: Double = centerY - radius
   val maxY: Double = centerY + radius
 
-  def move (dx: Double, dy: Double) = copy(centerX = centerX + dx, centerY = centerY + dy)
+  def move(dx: Double, dy: Double) =
+    copy(centerX = centerX + dx, centerY = centerY + dy)
   val describeShape: String = s"x = $centerX, y = $centerY, radius = $radius"
 
   lazy val perimeter: Double = 2 * scala.math.Pi * radius
   lazy val area: Double = scala.math.Pi * radius * radius
 }
 
-final case class Rectangle(x: Double, y: Double, width: Double, height: Double) extends Shape {
+final case class Rectangle(x: Double, y: Double, width: Double, height: Double)
+    extends Shape {
   require(width > 0, "width must be greater than 0")
   require(height > 0, "height must be greater than 0")
 
@@ -73,10 +81,11 @@ final case class Rectangle(x: Double, y: Double, width: Double, height: Double) 
   val minY: Double = y
   val maxY: Double = y + height
 
-  def move (dx: Double, dy: Double) = copy(x = x + dx, y = y + dy)
-  val describeShape: String = s"x = $x, y = $y, width = $width, height = $height"
+  def move(dx: Double, dy: Double) = copy(x = x + dx, y = y + dy)
+  val describeShape: String =
+    s"x = $x, y = $y, width = $width, height = $height"
 
-  lazy val perimeter: Double = width*2 + height*2
+  lazy val perimeter: Double = width * 2 + height * 2
   lazy val area: Double = width * height
 }
 
@@ -89,26 +98,31 @@ final case class Square(x: Double, y: Double, side: Double) extends Shape {
   val minY: Double = y
   val maxY: Double = y + side
 
-  def move (dx: Double, dy: Double) = copy(x = x + dx, y = y + dy)
+  def move(dx: Double, dy: Double) = copy(x = x + dx, y = y + dy)
   val describeShape: String = s"x = $x, y = $y, side = $side"
 
   lazy val perimeter: Double = side * 4
   lazy val area: Double = side * side
 }
 
-//          |\ 
-//  sideC  |  \  sideB 
+//          |\
+//  sideC  |  \  sideB
 //        |____\
 //   (x,y) sideA
-// 
+//
 // sideA is always horizontal (every point on sideA line has the same y value)
-final case class Triangle(x: Double, y: Double, sideA: Double, sideB: Double, sideC: Double) extends Shape {
+final case class Triangle(
+    x: Double,
+    y: Double,
+    sideA: Double,
+    sideB: Double,
+    sideC: Double
+) extends Shape {
   require(
-    sideA + sideB > sideC && sideB + sideC > sideA && sideA + sideC > sideB, 
-    "the triangle is non-existent")
-  require(
-    sideA > 0 && sideB > 0 && sideC > 0,
-    "sides should be greater than 0")
+    sideA + sideB > sideC && sideB + sideC > sideA && sideA + sideC > sideB,
+    "the triangle is non-existent"
+  )
+  require(sideA > 0 && sideB > 0 && sideC > 0, "sides should be greater than 0")
 
   val position: Point = Point(x, y)
   val point1: Point = Point(x, y)
@@ -129,7 +143,7 @@ final case class Triangle(x: Double, y: Double, sideA: Double, sideB: Double, si
   val describeShape: String = s"point1(${point1.describeShape}), " +
     s"point2(${point2.describeShape}), point3(${point3.describeShape}), " +
     s"sideA = $sideA, sideB = $sideB, sideC = $sideC, " +
-    s"minX = $minX, maxX = $maxX, minY = $minY, maxY = $maxY" 
+    s"minX = $minX, maxX = $maxX, minY = $minY, maxY = $maxY"
 
   lazy val perimeter: Double = sideA + sideB + sideC
   lazy val area: Double = {
