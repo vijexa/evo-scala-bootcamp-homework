@@ -22,5 +22,11 @@
             "name": "homework3",
             "testClass": "homework3.ControlStructuresHomeworkSpec"
         },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "homework4",
+            "testClass": "homework4.Homework4Spec"
+        },
     ]
 }
