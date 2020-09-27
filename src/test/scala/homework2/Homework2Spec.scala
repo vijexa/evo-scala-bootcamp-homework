@@ -194,4 +194,76 @@ class Homework2Spec extends org.scalatest.FunSuite {
     assert(
       ~=(Triangle(-10, -7, 5, 5.38, 8.60).maxY, -2))
   }
+  //////////////////////////////////////////////
+  test("Circle.perimeter") {
+    assert(
+      ~=(Circle(5, 3, 5).perimeter, 31.42))
+    assert(
+      ~=(Circle(2, 7, 10).perimeter, 62.83))
+    assert(
+      ~=(Circle(-7, 0, 15).perimeter, 94.25))
+  }
+  
+  test("Rectangle.perimeter") {
+    assert(
+      ~=(Rectangle(5, 2, 5, 14).perimeter, 5*2 + 14*2))
+    assert(
+      ~=(Rectangle(4, 67, 10, 34).perimeter, 10*2 + 34*2))
+    assert(
+      ~=(Rectangle(-10, 4, 15, 7).perimeter, 15*2 + 7*2))
+  }
+  
+  test("Square.perimeter") {
+    assert(
+      ~=(Square(1, 6, 12).perimeter, 12 * 4))
+    assert(
+      ~=(Square(43, 5, 4).perimeter, 4 * 4))
+    assert(
+      ~=(Square(-54, -43, 25).perimeter, 25 * 4))
+  }
+  
+  test("Triangle.perimeter") {
+    assert(
+      ~=(Triangle(2, 4, 15, 13, 5).perimeter, 33))
+    assert(
+      ~=(Triangle(45, 43, 37, 56, 34).perimeter, 127))
+    assert(
+      ~=(Triangle(-12, -55, 12, 23, 15).perimeter, 50))
+  }
+  //////////////////////////////////////////////
+  test("Circle.area") {
+    assert(
+      ~=(Circle(1, 4, 5).area, 78.54))
+    assert(
+      ~=(Circle(2, 6, 10).area, 314.16))
+    assert(
+      ~=(Circle(-9, -4, 15).area, 706.86))
+  }
+
+  test("Rectangle.area") {
+    assert(
+      ~=(Rectangle(5, 2, 5, 14).area, 5 * 14))
+    assert(
+      ~=(Rectangle(4, 67, 10, 34).area, 10 * 34))
+    assert(
+      ~=(Rectangle(-10, 4, 15, 7).area, 15 * 7))
+  }
+  
+  test("Square.area") {
+    assert(
+      ~=(Square(1, 6, 12).area, 12 * 12))
+    assert(
+      ~=(Square(43, 5, 4).area, 4 * 4))
+    assert(
+      ~=(Square(-54, -43, 25).area, 25 * 25))
+  }
+  
+  test("Triangle.area") {
+    assert(
+      ~=(Triangle(2, 4, 15, 13, 5).area, 31.56))
+    assert(
+      ~=(Triangle(45, 43, 37, 56, 34).area, 610.17))
+    assert(
+      ~=(Triangle(-12, -55, 12, 23, 15).area, 80.62))
+  }
 }

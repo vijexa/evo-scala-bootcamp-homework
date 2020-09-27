@@ -16,7 +16,12 @@ package homework2
 // to skip it (leave unimplemented), the primary intent of this
 // exercise is modelling using case classes and traits, and not math.
 
-sealed trait Shape extends Located with Bounded with Movable with Describable
+sealed trait Shape extends Located with Bounded with Movable with Describable with Geometric
+
+sealed trait Geometric {
+  def perimeter: Double
+  def area: Double
+}
 
 sealed trait Located {
   def position: Point
@@ -53,6 +58,9 @@ final case class Circle(centerX: Double, centerY: Double, radius: Double) extend
 
   def move (dx: Double, dy: Double) = copy(centerX = centerX + dx, centerY = centerY + dy)
   val describeShape: String = s"x = $centerX, y = $centerY, radius = $radius"
+
+  lazy val perimeter: Double = 2 * scala.math.Pi * radius
+  lazy val area: Double = scala.math.Pi * radius * radius
 }
 
 final case class Rectangle(x: Double, y: Double, width: Double, height: Double) extends Shape {
@@ -67,6 +75,9 @@ final case class Rectangle(x: Double, y: Double, width: Double, height: Double) 
 
   def move (dx: Double, dy: Double) = copy(x = x + dx, y = y + dy)
   val describeShape: String = s"x = $x, y = $y, width = $width, height = $height"
+
+  lazy val perimeter: Double = width*2 + height*2
+  lazy val area: Double = width * height
 }
 
 final case class Square(x: Double, y: Double, side: Double) extends Shape {
@@ -80,6 +91,9 @@ final case class Square(x: Double, y: Double, side: Double) extends Shape {
 
   def move (dx: Double, dy: Double) = copy(x = x + dx, y = y + dy)
   val describeShape: String = s"x = $x, y = $y, side = $side"
+
+  lazy val perimeter: Double = side * 4
+  lazy val area: Double = side * side
 }
 
 //          |\ 
@@ -116,4 +130,11 @@ final case class Triangle(x: Double, y: Double, sideA: Double, sideB: Double, si
     s"point2(${point2.describeShape}), point3(${point3.describeShape}), " +
     s"sideA = $sideA, sideB = $sideB, sideC = $sideC, " +
     s"minX = $minX, maxX = $maxX, minY = $minY, maxY = $maxY" 
+
+  lazy val perimeter: Double = sideA + sideB + sideC
+  lazy val area: Double = {
+    val p = perimeter / 2
+
+    scala.math.sqrt(p * (p - sideA) * (p - sideB) * (p - sideC))
+  }
 }
