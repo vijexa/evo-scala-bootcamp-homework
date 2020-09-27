@@ -16,13 +16,10 @@ package homework2
 // to skip it (leave unimplemented), the primary intent of this
 // exercise is modelling using case classes and traits, and not math.
 
-sealed trait Shape extends Located with Bounded with Movable {
-  def describeShape: String
-}
+sealed trait Shape extends Located with Bounded with Movable with Describable
 
 sealed trait Located {
-  def x: Double
-  def y: Double
+  def position: Point
 }
 
 sealed trait Bounded {
@@ -33,57 +30,56 @@ sealed trait Bounded {
 }
 
 sealed trait Movable {
-  def move (dx: Double, dy: Double): Shape 
+  def move (dx: Double, dy: Double): Movable
 }
 
-final case class Point(x: Double, y: Double) extends Shape {
-  def minX: Double = x
-  def maxX: Double = x
-  def minY: Double = y
-  def maxY: Double = y
+sealed trait Describable {
+  def describeShape: String
+}
 
+final case class Point(x: Double, y: Double) extends Movable with Describable {
   def move (dx: Double, dy: Double) = Point(x + dx, y + dy)
-  def describeShape: String = s"x = $x, y = $y"
+  val describeShape: String = s"x = $x, y = $y"
 }
-
 
 final case class Circle(centerX: Double, centerY: Double, radius: Double) extends Shape {
   require(radius > 0, "radius must be greater than 0")
 
-  def x: Double = centerX
-  def y: Double = centerY
-  def minX: Double = centerX - radius
-  def maxX: Double = centerX + radius
-  def minY: Double = centerY - radius
-  def maxY: Double = centerY + radius
+  val position: Point = Point(centerX, centerY)
+  val minX: Double = centerX - radius
+  val maxX: Double = centerX + radius
+  val minY: Double = centerY - radius
+  val maxY: Double = centerY + radius
 
-  def move (dx: Double, dy: Double) = Circle(x + dx, y + dy, radius)
-  def describeShape: String = s"x = $centerX, y = $centerY, radius = $radius"
+  def move (dx: Double, dy: Double) = copy(centerX = centerX + dx, centerY = centerY + dy)
+  val describeShape: String = s"x = $centerX, y = $centerY, radius = $radius"
 }
 
 final case class Rectangle(x: Double, y: Double, width: Double, height: Double) extends Shape {
   require(width > 0, "width must be greater than 0")
   require(height > 0, "height must be greater than 0")
 
-  def minX: Double = x
-  def maxX: Double = x + width
-  def minY: Double = y
-  def maxY: Double = y + height
+  val position: Point = Point(x, y)
+  val minX: Double = x
+  val maxX: Double = x + width
+  val minY: Double = y
+  val maxY: Double = y + height
 
-  def move (dx: Double, dy: Double) = Rectangle(x + dx, y + dy, width, height)
-  def describeShape: String = s"x = $x, y = $y, width = $width, height = $height"
+  def move (dx: Double, dy: Double) = copy(x = x + dx, y = y + dy)
+  val describeShape: String = s"x = $x, y = $y, width = $width, height = $height"
 }
 
 final case class Square(x: Double, y: Double, side: Double) extends Shape {
   require(side > 0, "side should be greater than 0")
 
-  def minX: Double = x
-  def maxX: Double = x + side
-  def minY: Double = y
-  def maxY: Double = y + side
+  val position: Point = Point(x, y)
+  val minX: Double = x
+  val maxX: Double = x + side
+  val minY: Double = y
+  val maxY: Double = y + side
 
-  def move (dx: Double, dy: Double) = Square(x + dx, y + dy, side)
-  def describeShape: String = s"x = $x, y = $y, side = $side"
+  def move (dx: Double, dy: Double) = copy(x = x + dx, y = y + dy)
+  val describeShape: String = s"x = $x, y = $y, side = $side"
 }
 
 //          |\ 
@@ -100,23 +96,24 @@ final case class Triangle(x: Double, y: Double, sideA: Double, sideB: Double, si
     sideA > 0 && sideB > 0 && sideC > 0,
     "sides should be greater than 0")
 
-  def point1: Point = Point(x, y)
-  def point2: Point = Point(x + sideA, y)
-  def point3: Point = {
-    val x = (sideA * sideA + sideC * sideC - sideB * sideB) / (2 * sideA)
-    val y = scala.math.sqrt(sideC * sideC - x * x)
+  val position: Point = Point(x, y)
+  val point1: Point = Point(x, y)
+  val point2: Point = Point(x + sideA, y)
+  val point3: Point = {
+    val p3x = (sideA * sideA + sideC * sideC - sideB * sideB) / (2 * sideA)
+    val p3y = scala.math.sqrt(sideC * sideC - p3x * p3x)
 
-    Point(x, y)
+    Point(x + p3x, y + p3y)
   }
 
-  def minX: Double = if (point1.x < point3.x) point1.x else point3.x
-  def maxX: Double = if (point2.x > point3.x) point2.x else point3.x
-  def minY: Double = point1.y
-  def maxY: Double = point3.y
+  val minX: Double = if (point1.x < point3.x) point1.x else point3.x
+  val maxX: Double = if (point2.x > point3.x) point2.x else point3.x
+  val minY: Double = point1.y
+  val maxY: Double = point3.y
 
-  def move(dx: Double, dy: Double): Shape = Triangle(x + dx, y + dy, sideA, sideB, sideC)
-  def describeShape: String = s"Point1(${point1.describeShape}), " +
-    s"Point2(${point2.describeShape}), Point3(${point3.describeShape}), " +
+  def move(dx: Double, dy: Double): Shape = copy(x = x + dx, y = y + dy)
+  val describeShape: String = s"point1(${point1.describeShape}), " +
+    s"point2(${point2.describeShape}), point3(${point3.describeShape}), " +
     s"sideA = $sideA, sideB = $sideB, sideC = $sideC, " +
     s"minX = $minX, maxX = $maxX, minY = $minY, maxY = $maxY" 
 }

@@ -33,9 +33,29 @@ class Homework2Spec extends org.scalatest.FunSuite {
   test("Triangle.describeShape") {
     assert(
       Triangle(0, 0, 3, 4, 5).describeShape
-        == "Point1(x = 0.0, y = 0.0), Point2(x = 3.0, y = 0.0), " +
-          "Point3(x = 3.0, y = 4.0), sideA = 3.0, sideB = 4.0, " +
+        == "point1(x = 0.0, y = 0.0), point2(x = 3.0, y = 0.0), " +
+          "point3(x = 3.0, y = 4.0), sideA = 3.0, sideB = 4.0, " +
           "sideC = 5.0, minX = 0.0, maxX = 3.0, minY = 0.0, maxY = 4.0")
+  }
+  //////////////////////////////////////////////
+  test("Circle.position"){
+    assert(
+      Circle(9, 4, 10).position == Point(9, 4))
+  }
+
+  test("Rectangle.position"){
+    assert(
+      Rectangle(3, 6, 4, 5).position == Point(3, 6))
+  }
+
+  test("Square.position"){
+    assert(
+      Square(2, 5, 5).position == Point(2, 5))
+  }
+
+  test("Triangle.position"){
+    assert(
+      Triangle(2, 3, 4, 5, 6).position == Point(2, 3))
   }
   //////////////////////////////////////////////
   test("Point.move"){
@@ -143,6 +163,10 @@ class Homework2Spec extends org.scalatest.FunSuite {
       ~=(Triangle(0, 0, 5, 8.60, 5.38).minX, -2))
     assert(
       ~=(Triangle(0, 0, 5, 5.38, 8.60).minX, 0))
+    assert(
+      ~=(Triangle(12, 9, 5, 5.38, 8.60).minX, 12))
+    assert(
+      ~=(Triangle(-12, -9, 5, 5.38, 8.60).minX, -12))
   }
 
   test("Triangle.maxX") {
@@ -152,6 +176,10 @@ class Homework2Spec extends org.scalatest.FunSuite {
       ~=(Triangle(0, 0, 5, 8.60, 5.38).maxX, 5))
     assert(
       ~=(Triangle(0, 0, 5, 5.38, 8.60).maxX, 7))
+    assert(
+      ~=(Triangle(5, 7, 5, 5.38, 8.60).maxX, 12))
+    assert(
+      ~=(Triangle(-5, -7, 5, 5.38, 8.60).maxX, 2))
   }
 
   test("Triangle.maxY") {
@@ -161,5 +189,9 @@ class Homework2Spec extends org.scalatest.FunSuite {
       ~=(Triangle(0, 0, 5, 8.60, 5.38).maxY, 5))
     assert(
       ~=(Triangle(0, 0, 5, 5.38, 8.60).maxY, 5))
+    assert(
+      ~=(Triangle(10, 7, 5, 5.38, 8.60).maxY, 12))
+    assert(
+      ~=(Triangle(-10, -7, 5, 5.38, 8.60).maxY, -2))
   }
 }
