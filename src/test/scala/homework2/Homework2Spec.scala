@@ -1,6 +1,7 @@
 package homework2
 
 import homework2.Shapes2D._
+import homework2.Shapes3D._
 class Homework2Spec extends org.scalatest.FunSuite {
   val testPrecision = 0.01
   def ~=(a: Double, b: Double) =
@@ -43,6 +44,34 @@ class Homework2Spec extends org.scalatest.FunSuite {
           "sideC = 5.0, minX = 0.0, maxX = 3.0, minY = 0.0, maxY = 4.0"
     )
   }
+
+  test("Sphere.describeShape") {
+    assert(
+      Sphere(12, -5, 7, 10).describeShape
+        == s"x = 12.0, y = -5.0, z = 7.0, radius = 10.0"
+    )
+  }
+
+  test("Cube.describeShape") {
+    assert(
+      Cube(12, -5, 7, 10).describeShape
+        == s"x = 12.0, y = -5.0, z = 7.0, side = 10.0"
+    )
+  }
+
+  test("Cuboid.describeShape") {
+    assert(
+      Cuboid(12, -5, 7, 10, 1, 4).describeShape
+        == s"x = 12.0, y = -5.0, z = 7.0, sidex = 10.0, sidey = 1.0, sidez = 4.0"
+    )
+  }
+
+  test("RegTetrahedron.describeShape") {
+    assert(
+      RegTetrahedron(12, -5, 7, 10).describeShape
+        == s"x = 12.0, y = -5.0, z = 7.0, side = 10.0"
+    )
+  }
   //////////////////////////////////////////////
   test("Circle.position") {
     assert(Circle(9, 4, 10).position == Point(9, 4))
@@ -58,6 +87,22 @@ class Homework2Spec extends org.scalatest.FunSuite {
 
   test("Triangle.position") {
     assert(Triangle(2, 3, 4, 5, 6).position == Point(2, 3))
+  }
+
+  test("Sphere.position") {
+    assert(Sphere(2, 3, 4, 5).position == Point3D(2, 3, 4))
+  }
+
+  test("Cube.position") {
+    assert(Cube(2, 3, 4, 5).position == Point3D(2, 3, 4))
+  }
+
+  test("Cuboid.position") {
+    assert(Cuboid(2, 3, 4, 5, 1, 2).position == Point3D(2, 3, 4))
+  }
+
+  test("RegTetrahedron.position") {
+    assert(RegTetrahedron(2, 3, 4, 5).position == Point3D(2, 3, 4))
   }
   //////////////////////////////////////////////
   test("Point.move") {
@@ -94,6 +139,33 @@ class Homework2Spec extends org.scalatest.FunSuite {
     )
     assert(
       Triangle(54, -37, 5, 5, 5).move(43, 21) == Triangle(97, -16, 5, 5, 5)
+    )
+  }
+
+  test("Sphere.move") {
+    assert(Sphere(2, 3, 4, 5).move(15, 4, 5) == Sphere(17, 7, 9, 5))
+    assert(Sphere(-4, -6, -1, 9).move(4, -7, 1) == Sphere(0, -13, 0, 9))
+  }
+
+  test("Cube.move") {
+    assert(Cube(2, 3, 4, 5).move(15, 4, 5) == Cube(17, 7, 9, 5))
+    assert(Cube(-4, -6, -1, 9).move(4, -7, 1) == Cube(0, -13, 0, 9))
+  }
+
+  test("Cuboid.move") {
+    assert(Cuboid(2, 3, 4, 5, 4, 4).move(15, 4, 5) == Cuboid(17, 7, 9, 5, 4, 4))
+    assert(
+      Cuboid(-4, -6, -1, 9, 6, 4).move(4, -7, 1) == Cuboid(0, -13, 0, 9, 6, 4)
+    )
+  }
+
+  test("RegTetrahedron.move") {
+    assert(
+      RegTetrahedron(2, 3, 4, 5).move(15, 4, 5) == RegTetrahedron(17, 7, 9, 5)
+    )
+    assert(
+      RegTetrahedron(-4, -6, -1, 9).move(4, -7, 1) ==
+        RegTetrahedron(0, -13, 0, 9)
     )
   }
   //////////////////////////////////////////////
@@ -144,6 +216,34 @@ class Homework2Spec extends org.scalatest.FunSuite {
       Triangle(4, 8, -4, 5, 1)
     }
     assert(Triangle(9, 7, 3, 4, 5).isInstanceOf[Triangle])
+  }
+
+  test("Sphere.apply") {
+    assertThrows[IllegalArgumentException] {
+      Sphere(3, 2, 4, -5)
+    }
+    assert(Sphere(9, 7, 3, 4).isInstanceOf[Sphere])
+  }
+
+  test("Cube.apply") {
+    assertThrows[IllegalArgumentException] {
+      Cube(3, 2, 4, -5)
+    }
+    assert(Cube(9, 7, 3, 4).isInstanceOf[Cube])
+  }
+
+  test("Cuboid.apply") {
+    assertThrows[IllegalArgumentException] {
+      Cuboid(3, 2, 4, -5, -1, -3)
+    }
+    assert(Cuboid(9, 7, 3, 4, 2, 1).isInstanceOf[Cuboid])
+  }
+
+  test("RegTetrahedron.apply") {
+    assertThrows[IllegalArgumentException] {
+      RegTetrahedron(3, 2, 4, -5)
+    }
+    assert(RegTetrahedron(9, 7, 3, 4).isInstanceOf[RegTetrahedron])
   }
   //////////////////////////////////////////////
   test("Triangle.minX") {
@@ -216,5 +316,55 @@ class Homework2Spec extends org.scalatest.FunSuite {
     assert(~=(Triangle(2, 4, 15, 13, 5).area, 31.56))
     assert(~=(Triangle(45, 43, 37, 56, 34).area, 610.17))
     assert(~=(Triangle(-12, -55, 12, 23, 15).area, 80.62))
+  }
+  //////////////////////////////////////////////
+  test("Sphere.surfaceArea") {
+    assert(~=(Sphere(1, 4, 5, 10).surfaceArea, 1256.64))
+    assert(~=(Sphere(2, 6, -10, 4).surfaceArea, 201.06))
+  }
+
+  test("Cube.surfaceArea") {
+    assert(~=(Cube(1, 4, 5, 10).surfaceArea, 600))
+    assert(~=(Cube(2, 6, -10, 4).surfaceArea, 96))
+  }
+
+  test("Cuboid.surfaceArea") {
+    assert(~=(Cuboid(1, 4, 5, 10, 9, 2).surfaceArea, 256))
+    assert(~=(Cuboid(2, 6, -10, 4, 5, 7).surfaceArea, 166))
+  }
+
+  test("RegTetrahedron.surfaceArea") {
+    assert(~=(RegTetrahedron(1, 4, 5, 10).surfaceArea, 173.21))
+    assert(~=(RegTetrahedron(2, 6, -10, 4).surfaceArea, 27.71))
+  }
+  //////////////////////////////////////////////
+  test("Sphere.volume") {
+    assert(~=(Sphere(1, 4, 5, 10).volume, 4188.79))
+    assert(~=(Sphere(2, 6, -10, 4).volume, 268.08))
+  }
+
+  test("Cube.volume") {
+    assert(~=(Cube(1, 4, 5, 10).volume, 1000))
+    assert(~=(Cube(2, 6, -10, 4).volume, 64))
+  }
+
+  test("Cuboid.volume") {
+    assert(~=(Cuboid(1, 4, 5, 10, 9, 2).volume, 180))
+    assert(~=(Cuboid(2, 6, -10, 4, 5, 7).volume, 140))
+  }
+
+  test("RegTetrahedron.volume") {
+    assert(~=(RegTetrahedron(1, 4, 5, 10).volume, 117.85))
+    assert(~=(RegTetrahedron(2, 6, -10, 4).volume, 7.54))
+  }
+  //////////////////////////////////////////////
+  test("RegTetrahedron.maxY") {
+    assert(~=(RegTetrahedron(1, 4, 5, 10).maxY, 12.66))
+    assert(~=(RegTetrahedron(2, 6, -10, 4).maxY, 9.46))
+  }
+
+  test("RegTetrahedron.maxZ") {
+    assert(~=(RegTetrahedron(1, 4, 5, 10).maxZ, 13.16))
+    assert(~=(RegTetrahedron(2, 6, -10, 4).maxZ, -6.73))
   }
 }
