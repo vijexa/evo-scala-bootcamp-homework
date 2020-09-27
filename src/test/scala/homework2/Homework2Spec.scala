@@ -1,5 +1,6 @@
 package homework2
 
+import homework2.Shapes2D._
 class Homework2Spec extends org.scalatest.FunSuite {
   val testPrecision = 0.01
   def ~=(a: Double, b: Double) =
