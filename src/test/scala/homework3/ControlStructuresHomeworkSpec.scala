@@ -62,4 +62,16 @@ class ControlStructuresHomeworkSpec extends AnyFlatSpec with should.Matchers {
     assert(calculate(Command.Divide(345, 0)).isLeft)
   }
   
+  "renderResult" should "correctly render result" in {
+    assert(
+      renderResult(
+        Result.SumResult(45d::3645d::664d::746d::324d::245d::245d::Nil, 5914d)
+      ) == "the sum of 45.0 3645.0 664.0 746.0 324.0 245.0 245.0 is 5914.0"
+    )
+    assert(
+      renderResult(
+        Result.DivideResult(332, 432, 0.7685185185185185)
+      ) == "332.0 divided by 432.0 is 0.7685185185185185"
+    )
+  }
 }

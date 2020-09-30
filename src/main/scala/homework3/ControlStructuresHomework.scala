@@ -106,30 +106,25 @@ object ControlStructuresHomework {
   }
 
   def renderResult(x: Result): String = {
-    ??? // implement this method
+    x match {
+      case Result.DivideResult(dividend, divisor, result) => s"$dividend divided by $divisor is $result"
+      case Result.SumResult(numbers, result)  => s"the sum of ${numbers.mkString(" ")} is $result"
+      case Result.AverageResult(numbers, result) => s"the average of ${numbers.mkString(" ")} is $result"
+      case Result.MinResult(numbers, result) => s"the minimum of ${numbers.mkString(" ")} is $result"
+      case Result.MaxResult(numbers, result) => s"the maximum of ${numbers.mkString(" ")} is $result"
+    }
   }
 
   def process(x: String): String = {
-    import cats.implicits._
-    // the import above will enable useful operations on Either-s such as `leftMap`                                                                                                                     
-    // (map over the Left channel) and `merge` (convert `Either[A, A]` into `A`),
-    // but you can also avoid using them using pattern matching.
-
-    (for {
+    val result = for {
       command <- parseCommand(x)
-      result <- calculate(command)
-    } yield result).toString
+      result  <- calculate(command)
+    } yield result
     
-/* 
-    for {
-      command <- parseCommand(x)
-      result <- calculate(command)
-      renderedRes <- renderResult(result)
-    } yield renderedRes */
-
-    // parseCommand(x)
-    // calculate(command)
-    // renderResult()
+    result.fold(
+      s"${Console.RED}Error: " + _.value + Console.RESET,
+      renderResult(_)
+    )
   }
 
   // This `main` method reads lines from stdin, passes each to `process` and outputs the return value to stdout
