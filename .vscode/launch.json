@@ -10,12 +10,17 @@
             "name": "homework1",
             "testClass": "homework1.Homework1Spec"
         },
-        
         {
             "type": "scala",
             "name": "homework2 ",
             "request": "launch",
             "testClass": "homework2.Homework2Spec"
-        }
+        },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "homework3",
+            "testClass": "homework3.ControlStructuresHomeworkSpec"
+        },
     ]
 }
