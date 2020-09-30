@@ -34,36 +34,36 @@ class ControlStructuresHomeworkSpec extends AnyFlatSpec with should.Matchers {
     val list2 = 143d :: -134d :: 45767d :: -341326d :: Nil
 
     "calculate" should "correctly calculate Sum" in {
-      assert(calculate(Command.Sum(list1)) == Right(Result.SumResult(list1, 15)))
-      assert(calculate(Command.Sum(list2)) == Right(Result.SumResult(list2, -295550)))
+      assert(calculate(Command.Sum(list1)) == Right(Result.Sum(list1, 15)))
+      assert(calculate(Command.Sum(list2)) == Right(Result.Sum(list2, -295550)))
     }
     
     "calculate" should "correctly calculate Multiply" in {
-      assert(calculate(Command.Multiply(list1)) == Right(Result.MultiplyResult(list1, 120)))
-      assert(calculate(Command.Multiply(list2)) == Right(Result.MultiplyResult(list2, 299338551458804d)))
+      assert(calculate(Command.Multiply(list1)) == Right(Result.Multiply(list1, 120)))
+      assert(calculate(Command.Multiply(list2)) == Right(Result.Multiply(list2, 299338551458804d)))
     }
 
     "calculate" should "correctly calculate Average" in {
-      assert(calculate(Command.Average(list1)) == Right(Result.AverageResult(list1, 3)))
-      assert(calculate(Command.Average(list2)) == Right(Result.AverageResult(list2, -73887.5)))
+      assert(calculate(Command.Average(list1)) == Right(Result.Average(list1, 3)))
+      assert(calculate(Command.Average(list2)) == Right(Result.Average(list2, -73887.5)))
     }
 
     "calculate" should "correctly calculate Min" in {
-      assert(calculate(Command.Min(list1)) == Right(Result.MinResult(list1, 1)))
-      assert(calculate(Command.Min(list2)) == Right(Result.MinResult(list2, -341326)))
+      assert(calculate(Command.Min(list1)) == Right(Result.Min(list1, 1)))
+      assert(calculate(Command.Min(list2)) == Right(Result.Min(list2, -341326)))
     }
 
     "calculate" should "correctly calculate Max" in {
-      assert(calculate(Command.Max(list1)) == Right(Result.MaxResult(list1, 5)))
-      assert(calculate(Command.Max(list2)) == Right(Result.MaxResult(list2, 45767)))
+      assert(calculate(Command.Max(list1)) == Right(Result.Max(list1, 5)))
+      assert(calculate(Command.Max(list2)) == Right(Result.Max(list2, 45767)))
     }
   }
 
   "calculate" should "correctly calculate Divide" in {
-    assert(calculate(Command.Divide(10, 15)) == Right(Result.DivideResult(10, 15, 2d/3d)))
-    assert(calculate(Command.Divide(100, -10)) == Right(Result.DivideResult(100, -10, -10)))
-    assert(calculate(Command.Divide(42, 2)) == Right(Result.DivideResult(42, 2, 21)))
-    assert(calculate(Command.Divide(0, 13)) == Right(Result.DivideResult(0, 13, 0)))
+    assert(calculate(Command.Divide(10, 15)) == Right(Result.Divide(10, 15, 2d/3d)))
+    assert(calculate(Command.Divide(100, -10)) == Right(Result.Divide(100, -10, -10)))
+    assert(calculate(Command.Divide(42, 2)) == Right(Result.Divide(42, 2, 21)))
+    assert(calculate(Command.Divide(0, 13)) == Right(Result.Divide(0, 13, 0)))
     assert(calculate(Command.Divide(0, 0)).isLeft)
     assert(calculate(Command.Divide(345, 0)).isLeft)
   }
@@ -71,12 +71,12 @@ class ControlStructuresHomeworkSpec extends AnyFlatSpec with should.Matchers {
   "renderResult" should "correctly render result" in {
     assert(
       renderResult(
-        Result.SumResult(45d::3645d::664d::746d::324d::245d::245d::Nil, 5914d)
+        Result.Sum(45d::3645d::664d::746d::324d::245d::245d::Nil, 5914d)
       ) == "the sum of 45.0 3645.0 664.0 746.0 324.0 245.0 245.0 is 5914.0"
     )
     assert(
       renderResult(
-        Result.DivideResult(332, 432, 0.7685185185185185)
+        Result.Divide(332, 432, 0.7685185185185185)
       ) == "332.0 divided by 432.0 is 0.7685185185185185"
     )
   }

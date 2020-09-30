@@ -42,12 +42,12 @@ object ControlStructuresHomework {
 
   sealed trait Result
   object Result {
-    final case class DivideResult(dividend: Double, divisor: Double, result: Double) extends Result
-    final case class MultiplyResult(numbers: List[Double], result: Double) extends Result
-    final case class SumResult(numbers: List[Double], result: Double) extends Result
-    final case class AverageResult(numbers: List[Double], result: Double) extends Result
-    final case class MinResult(numbers: List[Double], result: Double) extends Result
-    final case class MaxResult(numbers: List[Double], result: Double) extends Result
+    final case class Divide(dividend: Double, divisor: Double, result: Double) extends Result
+    final case class Multiply(numbers: List[Double], result: Double) extends Result
+    final case class Sum(numbers: List[Double], result: Double) extends Result
+    final case class Average(numbers: List[Double], result: Double) extends Result
+    final case class Min(numbers: List[Double], result: Double) extends Result
+    final case class Max(numbers: List[Double], result: Double) extends Result
   }
 
   def parseCommand(str: String): Either[ErrorMessage, Command] = {
@@ -98,25 +98,24 @@ object ControlStructuresHomework {
     x match {
       case Command.Divide(dividend, divisor)  => divisor match {
         case 0 => Left(ErrorMessage("division by zero"))
-        case _ => Right(Result.DivideResult(dividend, divisor, dividend / divisor))
+        case _ => Right(Result.Divide(dividend, divisor, dividend / divisor))
       }
-      case Command.Sum(numbers)               => Right(Result.SumResult(numbers, numbers.sum))
-      case Command.Multiply(numbers)          => Right(Result.MultiplyResult(numbers, numbers.reduce(_*_)))
-      case Command.Average(numbers)           => 
-        Right(Result.AverageResult(numbers, numbers.sum / numbers.length))
-      case Command.Min(numbers)               => Right(Result.MinResult(numbers, numbers.min))
-      case Command.Max(numbers)               => Right(Result.MaxResult(numbers, numbers.max))
+      case Command.Sum(numbers)               => Right(Result.Sum(numbers, numbers.sum))
+      case Command.Multiply(numbers)          => Right(Result.Multiply(numbers, numbers.reduce(_*_)))
+      case Command.Average(numbers)           => Right(Result.Average(numbers, numbers.sum / numbers.length))
+      case Command.Min(numbers)               => Right(Result.Min(numbers, numbers.min))
+      case Command.Max(numbers)               => Right(Result.Max(numbers, numbers.max))
     }
   }
 
   def renderResult(x: Result): String = {
     x match {
-      case Result.DivideResult(dividend, divisor, result) => s"$dividend divided by $divisor is $result"
-      case Result.SumResult(numbers, result) => s"the sum of ${numbers.mkString(" ")} is $result"
-      case Result.MultiplyResult(numbers, result) => s"the multiplication of ${numbers.mkString(" ")} is $result"
-      case Result.AverageResult(numbers, result) => s"the average of ${numbers.mkString(" ")} is $result"
-      case Result.MinResult(numbers, result) => s"the minimum of ${numbers.mkString(" ")} is $result"
-      case Result.MaxResult(numbers, result) => s"the maximum of ${numbers.mkString(" ")} is $result"
+      case Result.Divide(dividend, divisor, result) => s"$dividend divided by $divisor is $result"
+      case Result.Sum(numbers, result) => s"the sum of ${numbers.mkString(" ")} is $result"
+      case Result.Multiply(numbers, result) => s"the multiplication of ${numbers.mkString(" ")} is $result"
+      case Result.Average(numbers, result) => s"the average of ${numbers.mkString(" ")} is $result"
+      case Result.Min(numbers, result) => s"the minimum of ${numbers.mkString(" ")} is $result"
+      case Result.Max(numbers, result) => s"the maximum of ${numbers.mkString(" ")} is $result"
     }
   }
 
