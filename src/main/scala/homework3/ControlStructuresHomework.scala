@@ -80,7 +80,7 @@ object ControlStructuresHomework {
             else Left(ErrorMessage(s"divide should have exactly 2 arguments, it has ${parsedN.length}"))
           }
           case "sum"      => Right(Command.Sum(parsedN))
-          case "multiply"      => Right(Command.Multiply(parsedN))
+          case "multiply" => Right(Command.Multiply(parsedN))
           case "average"  => Right(Command.Average(parsedN))
           case "min"      => Right(Command.Min(parsedN))
           case "max"      => Right(Command.Max(parsedN))
