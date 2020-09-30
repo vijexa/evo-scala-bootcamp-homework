@@ -27,4 +27,39 @@ class ControlStructuresHomeworkSpec extends AnyFlatSpec with should.Matchers {
     assert(parseCommand("min " + longString) == Right(Command.Min(longList)))
     assert(parseCommand("max " + longString) == Right(Command.Max(longList)))
   }
+
+  {
+    val list1 = 1d :: 2d :: 3d :: 4d :: 5d :: Nil
+    val list2 = 143d :: -134d :: 45767d :: -341326d :: Nil
+
+    "calculate" should "correctly calculate Sum" in {
+      assert(calculate(Command.Sum(list1)) == Right(Result.SumResult(list1, 15)))
+      assert(calculate(Command.Sum(list2)) == Right(Result.SumResult(list2, -295550)))
+    }
+
+    "calculate" should "correctly calculate Average" in {
+      assert(calculate(Command.Average(list1)) == Right(Result.AverageResult(list1, 3)))
+      assert(calculate(Command.Average(list2)) == Right(Result.AverageResult(list2, -73887.5)))
+    }
+
+    "calculate" should "correctly calculate Min" in {
+      assert(calculate(Command.Min(list1)) == Right(Result.MinResult(list1, 1)))
+      assert(calculate(Command.Min(list2)) == Right(Result.MinResult(list2, -341326)))
+    }
+
+    "calculate" should "correctly calculate Max" in {
+      assert(calculate(Command.Max(list1)) == Right(Result.MaxResult(list1, 5)))
+      assert(calculate(Command.Max(list2)) == Right(Result.MaxResult(list2, 45767)))
+    }
+  }
+
+  "calculate" should "correctly calculate Divide" in {
+    assert(calculate(Command.Divide(10, 15)) == Right(Result.DivideResult(10, 15, 2d/3d)))
+    assert(calculate(Command.Divide(100, -10)) == Right(Result.DivideResult(100, -10, -10)))
+    assert(calculate(Command.Divide(42, 2)) == Right(Result.DivideResult(42, 2, 21)))
+    assert(calculate(Command.Divide(0, 13)) == Right(Result.DivideResult(0, 13, 0)))
+    assert(calculate(Command.Divide(0, 0)).isLeft)
+    assert(calculate(Command.Divide(345, 0)).isLeft)
+  }
+  
 }

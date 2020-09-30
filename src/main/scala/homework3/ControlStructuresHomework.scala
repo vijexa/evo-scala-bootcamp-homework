@@ -40,7 +40,13 @@ object ControlStructuresHomework {
   final case class ErrorMessage(value: String)
 
   sealed trait Result
-  final case class ChangeMe(value: String) extends Result // adjust Result as required to match requirements
+  object Result {
+    final case class DivideResult(dividend: Double, divisor: Double, result: Double) extends Result
+    final case class SumResult(numbers: List[Double], result: Double) extends Result
+    final case class AverageResult(numbers: List[Double], result: Double) extends Result
+    final case class MinResult(numbers: List[Double], result: Double) extends Result
+    final case class MaxResult(numbers: List[Double], result: Double) extends Result
+  }
 
   def parseCommand(str: String): Either[ErrorMessage, Command] = {
     // Implementation hints:
@@ -86,7 +92,17 @@ object ControlStructuresHomework {
   // should return an error (using `Left` channel) in case of division by zero and other
   // invalid operations
   def calculate(x: Command): Either[ErrorMessage, Result] = {
-    ??? // implement this method
+    x match {
+      case Command.Divide(dividend, divisor)  => divisor match {
+        case 0 => Left(ErrorMessage("division by zero"))
+        case _ => Right(Result.DivideResult(dividend, divisor, dividend / divisor))
+      }
+      case Command.Sum(numbers)               => Right(Result.SumResult(numbers, numbers.sum))
+      case Command.Average(numbers)           => 
+        Right(Result.AverageResult(numbers, numbers.sum / numbers.length))
+      case Command.Min(numbers)               => Right(Result.MinResult(numbers, numbers.min))
+      case Command.Max(numbers)               => Right(Result.MaxResult(numbers, numbers.max))
+    }
   }
 
   def renderResult(x: Result): String = {
@@ -95,11 +111,15 @@ object ControlStructuresHomework {
 
   def process(x: String): String = {
     import cats.implicits._
-    // the import above will enable useful operations on Either-s such as `leftMap`
+    // the import above will enable useful operations on Either-s such as `leftMap`                                                                                                                     
     // (map over the Left channel) and `merge` (convert `Either[A, A]` into `A`),
     // but you can also avoid using them using pattern matching.
 
-    parseCommand(x).toString // implement using a for-comprehension
+    (for {
+      command <- parseCommand(x)
+      result <- calculate(command)
+    } yield result).toString
+    
 /* 
     for {
       command <- parseCommand(x)
