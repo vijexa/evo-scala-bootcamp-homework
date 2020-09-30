@@ -71,8 +71,8 @@ object ControlStructuresHomework {
         Right(doubleList)
       }
     }
-    
-    str.replaceAll("\\s+"," ").split(" ").toList match {
+
+    str.split(" ").filter(!_.isEmpty).toList match {
       case x :: xs => parseNumbers(xs) match {
         case Right(parsedN) => x match {
           case "divide"   => {
