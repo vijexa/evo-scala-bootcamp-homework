@@ -31,6 +31,7 @@ object ControlStructuresHomework {
   sealed trait Command
   object Command {
     final case class Divide(dividend: Double, divisor: Double) extends Command
+    final case class Multiply(numbers: List[Double]) extends Command
     final case class Sum(numbers: List[Double]) extends Command
     final case class Average(numbers: List[Double]) extends Command
     final case class Min(numbers: List[Double]) extends Command
@@ -42,6 +43,7 @@ object ControlStructuresHomework {
   sealed trait Result
   object Result {
     final case class DivideResult(dividend: Double, divisor: Double, result: Double) extends Result
+    final case class MultiplyResult(numbers: List[Double], result: Double) extends Result
     final case class SumResult(numbers: List[Double], result: Double) extends Result
     final case class AverageResult(numbers: List[Double], result: Double) extends Result
     final case class MinResult(numbers: List[Double], result: Double) extends Result
@@ -78,6 +80,7 @@ object ControlStructuresHomework {
             else Left(ErrorMessage(s"divide should have exactly 2 arguments, it has ${parsedN.length}"))
           }
           case "sum"      => Right(Command.Sum(parsedN))
+          case "multiply"      => Right(Command.Multiply(parsedN))
           case "average"  => Right(Command.Average(parsedN))
           case "min"      => Right(Command.Min(parsedN))
           case "max"      => Right(Command.Max(parsedN))
@@ -98,6 +101,7 @@ object ControlStructuresHomework {
         case _ => Right(Result.DivideResult(dividend, divisor, dividend / divisor))
       }
       case Command.Sum(numbers)               => Right(Result.SumResult(numbers, numbers.sum))
+      case Command.Multiply(numbers)          => Right(Result.MultiplyResult(numbers, numbers.reduce(_*_)))
       case Command.Average(numbers)           => 
         Right(Result.AverageResult(numbers, numbers.sum / numbers.length))
       case Command.Min(numbers)               => Right(Result.MinResult(numbers, numbers.min))
@@ -108,7 +112,8 @@ object ControlStructuresHomework {
   def renderResult(x: Result): String = {
     x match {
       case Result.DivideResult(dividend, divisor, result) => s"$dividend divided by $divisor is $result"
-      case Result.SumResult(numbers, result)  => s"the sum of ${numbers.mkString(" ")} is $result"
+      case Result.SumResult(numbers, result) => s"the sum of ${numbers.mkString(" ")} is $result"
+      case Result.MultiplyResult(numbers, result) => s"the multiplication of ${numbers.mkString(" ")} is $result"
       case Result.AverageResult(numbers, result) => s"the average of ${numbers.mkString(" ")} is $result"
       case Result.MinResult(numbers, result) => s"the minimum of ${numbers.mkString(" ")} is $result"
       case Result.MaxResult(numbers, result) => s"the maximum of ${numbers.mkString(" ")} is $result"

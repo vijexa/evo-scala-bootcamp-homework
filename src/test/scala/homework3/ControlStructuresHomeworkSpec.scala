@@ -22,6 +22,7 @@ class ControlStructuresHomeworkSpec extends AnyFlatSpec with should.Matchers {
     val longList: List[Double] = 1134d :: 7584d :: 4641d :: 1432d :: 13423d :: Nil
 
     assert(parseCommand("sum " + longString) == Right(Command.Sum(longList)))
+    assert(parseCommand("multiply " + longString) == Right(Command.Multiply(longList)))
     assert(parseCommand("divide 254 3654") == Right(Command.Divide(254, 3654)))
     assert(parseCommand("average " + longString) == Right(Command.Average(longList)))
     assert(parseCommand("min " + longString) == Right(Command.Min(longList)))
@@ -35,6 +36,11 @@ class ControlStructuresHomeworkSpec extends AnyFlatSpec with should.Matchers {
     "calculate" should "correctly calculate Sum" in {
       assert(calculate(Command.Sum(list1)) == Right(Result.SumResult(list1, 15)))
       assert(calculate(Command.Sum(list2)) == Right(Result.SumResult(list2, -295550)))
+    }
+    
+    "calculate" should "correctly calculate Multiply" in {
+      assert(calculate(Command.Multiply(list1)) == Right(Result.MultiplyResult(list1, 120)))
+      assert(calculate(Command.Multiply(list2)) == Right(Result.MultiplyResult(list2, 299338551458804d)))
     }
 
     "calculate" should "correctly calculate Average" in {
