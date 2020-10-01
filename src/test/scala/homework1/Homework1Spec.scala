@@ -1,6 +1,6 @@
 package homework1
 
-class Homework1Spec extends org.scalatest.FunSuite {
+class Homework1Spec extends org.scalatest.funsuite.AnyFunSuite {
   test("Homework1.lcm") {
     assert(Homework1.lcm(6, 9) === 18)
     assert(Homework1.lcm(3, 9) === 9)

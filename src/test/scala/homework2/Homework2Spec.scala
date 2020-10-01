@@ -2,7 +2,7 @@ package homework2
 
 import homework2.Shapes2D._
 import homework2.Shapes3D._
-class Homework2Spec extends org.scalatest.FunSuite {
+class Homework2Spec extends org.scalatest.funsuite.AnyFunSuite {
   val testPrecision = 0.01
   def ~=(a: Double, b: Double) =
     if ((a - b).abs < testPrecision) true else false
