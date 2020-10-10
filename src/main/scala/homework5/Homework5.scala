@@ -12,6 +12,7 @@ import akka.http.scaladsl.server.util.BinaryPolyFunc.Case
 import shapeless.ops.fin
 import scala.collection.immutable.Nil
 import scala.util.chaining._
+import doobie.util.fragment.Elem.Opt
 
 object Homework5 {
   // Homework. Define all algebraic data types, which would be needed to implement “Hold’em Hand Strength”
@@ -128,7 +129,9 @@ object Homework5 {
 
 
   final case class Card (suit: Suit, rank: Rank)
-  final case class CardList (list: List[Card]) 
+  final case class CardList (list: List[Card]) {
+    val length = list.length
+  }
 
   sealed trait Hand
   sealed trait CardContainer {
@@ -138,7 +141,7 @@ object Homework5 {
     def containerLength: Int
     def apply(cards: CardList): CardContainer
     def create(cards: CardList): Option[CardContainer] = 
-      if (cards.list.length == containerLength) Some(apply(cards))
+      if (cards.length == containerLength) Some(apply(cards))
       else None
   }
 
@@ -263,7 +266,7 @@ object Homework5 {
     def create(comb: PokerCombination, cards: CardList): Either[ErrorMessage, CaseCombination] = comb match {
       case TwoPairs | FullHouse => Left(ErrorMessage(s"Please use 'CaseCombination.create(comb:PokerCombination, cards:List[CardList])' to create CaseCombination for $comb"))
       case _ => {
-        if (comb.firstElement.cardsLength == cards.list.length) Right(CaseCombination(comb, List(cards)))
+        if (comb.firstElement.cardsLength == cards.length) Right(CaseCombination(comb, List(cards)))
         else Left(ErrorMessage(s"cards.length for $comb should be exactly ${comb.firstElement.cardsLength}"))
       }
     }
@@ -271,7 +274,7 @@ object Homework5 {
     def create(comb: PokerCombination, elementaryCombinations: List[CardList]): Either[ErrorMessage, CaseCombination] = comb match {
       case comb @ (TwoPairs | FullHouse) => elementaryCombinations match { 
         case firstEl :: secondEl :: Nil =>  
-          if (firstEl.list.length == comb.firstElement.cardsLength && secondEl.list.length == comb.secondElement.get.cardsLength) Right(CaseCombination(comb, elementaryCombinations))
+          if (firstEl.length == comb.firstElement.cardsLength && secondEl.length == comb.secondElement.get.cardsLength) Right(CaseCombination(comb, elementaryCombinations))
           else Left(ErrorMessage(s"elementaryCombinations elements lengths for $comb should be ${comb.firstElement.cardsLength} and ${comb.secondElement.get.cardsLength}"))
         case _ => Left(ErrorMessage(s"elementaryCombinations.length for $comb should be exactly 2"))
       }
@@ -282,4 +285,20 @@ object Homework5 {
     }
   }
 
+
+
+  case class TestCase (board: Board, hands: List[Hand])
+  object TestCase {
+    def create (board: Board, hands: List[Hand]): Option[TestCase] =
+      if (hands.length >= 2) Some(TestCase(board, hands))
+      else None
+  }
+
+  case class HandWithCombination (hand: Hand, combination: CaseCombination)
+  case class TestResult (sortedHands: List[HandWithCombination]) extends AnyVal
+  object TestResult {
+    def create (sortedHands: List[HandWithCombination]): Option[TestResult] =
+      if (sortedHands.length >= 2) Some(TestResult(sortedHands))
+      else None
+  }
 }
