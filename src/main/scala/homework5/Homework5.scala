@@ -1,18 +1,4 @@
 package homework5
-import homework5.Homework5.PokerCombination.HighCard
-import homework5.Homework5.PokerCombination.Pair
-import homework5.Homework5.PokerCombination.TwoPairs
-import homework5.Homework5.PokerCombination.ThreeOfAKind
-import homework5.Homework5.PokerCombination.Straight
-import homework5.Homework5.PokerCombination.Flush
-import homework5.Homework5.PokerCombination.FullHouse
-import homework5.Homework5.PokerCombination.FourOfAKind
-import homework5.Homework5.PokerCombination.StraightFlush
-import akka.http.scaladsl.server.util.BinaryPolyFunc.Case
-import shapeless.ops.fin
-import scala.collection.immutable.Nil
-import scala.util.chaining._
-import doobie.util.fragment.Elem.Opt
 
 object Homework5 {
   // Homework. Define all algebraic data types, which would be needed to implement “Hold’em Hand Strength”
@@ -263,24 +249,42 @@ object Homework5 {
     def secondElementaryComb: Option[CardList] = cards.tail.headOption
   }
   case object CaseCombination {
-    def create(comb: PokerCombination, cards: CardList): Either[ErrorMessage, CaseCombination] = comb match {
-      case TwoPairs | FullHouse => Left(ErrorMessage(s"Please use 'CaseCombination.create(comb:PokerCombination, cards:List[CardList])' to create CaseCombination for $comb"))
+    import PokerCombination._
+    
+    def create(
+      comb: PokerCombination, 
+      cards: CardList
+    ): Either[ErrorMessage, CaseCombination] = comb match {
+      case TwoPairs | FullHouse => Left(ErrorMessage(
+        s"Please use 'CaseCombination.create(comb:PokerCombination, " +
+          s"cards:List[CardList])' to create CaseCombination for $comb"))
       case _ => {
-        if (comb.firstElement.cardsLength == cards.length) Right(CaseCombination(comb, List(cards)))
-        else Left(ErrorMessage(s"cards.length for $comb should be exactly ${comb.firstElement.cardsLength}"))
+        if (comb.firstElement.cardsLength == cards.length) 
+          Right(CaseCombination(comb, List(cards)))
+        else Left(ErrorMessage(s"cards.length for $comb should be " +
+          s"exactly ${comb.firstElement.cardsLength}"))
       }
     }
 
-    def create(comb: PokerCombination, elementaryCombinations: List[CardList]): Either[ErrorMessage, CaseCombination] = comb match {
+    def create(
+      comb: PokerCombination, 
+      elementaryCombinations: List[CardList]
+    ): Either[ErrorMessage, CaseCombination] = comb match {
       case comb @ (TwoPairs | FullHouse) => elementaryCombinations match { 
         case firstEl :: secondEl :: Nil =>  
-          if (firstEl.length == comb.firstElement.cardsLength && secondEl.length == comb.secondElement.get.cardsLength) Right(CaseCombination(comb, elementaryCombinations))
-          else Left(ErrorMessage(s"elementaryCombinations elements lengths for $comb should be ${comb.firstElement.cardsLength} and ${comb.secondElement.get.cardsLength}"))
-        case _ => Left(ErrorMessage(s"elementaryCombinations.length for $comb should be exactly 2"))
+          if (firstEl.length == comb.firstElement.cardsLength && 
+            secondEl.length == comb.secondElement.get.cardsLength) 
+              Right(CaseCombination(comb, elementaryCombinations))
+          else Left(ErrorMessage(
+            s"elementaryCombinations elements lengths for $comb should be " +
+              s"${comb.firstElement.cardsLength} and ${comb.secondElement.get.cardsLength}"))
+        case _ => Left(ErrorMessage(s"elementaryCombinations.length " +
+          s"for $comb should be exactly 2"))
       }
       case _ => elementaryCombinations match {
         case el :: Nil => create(comb, el)
-        case _ => Left(ErrorMessage(s"elementaryCombinations.length for $comb should be exactly 1"))
+        case _ => Left(ErrorMessage(s"elementaryCombinations.length " +
+          s"for $comb should be exactly 1"))
       }
     }
   }
