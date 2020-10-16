@@ -28,7 +28,9 @@ object Homework7 {
     case object CardNumberInvalidFormat extends ValidationError
   }
 
-  class CardholderName private (name: String)
+  class CardholderName private (_name: String){
+    val name = _name
+  }
   object CardholderName {
     import ValidationError._
 
@@ -50,7 +52,10 @@ object Homework7 {
       )
   }
 
-  class CardNumber private (number: String, issuerId: CardNumber.IssuerId)
+  class CardNumber private (_number: String, _issuerId: CardNumber.IssuerId) {
+    val number = _number
+    val issuerId = _issuerId
+  }
   object CardNumber{
     import ValidationError._
 

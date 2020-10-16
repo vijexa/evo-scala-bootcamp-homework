@@ -53,4 +53,12 @@ class Homework7Spec extends AnyFlatSpec with should.Matchers {
     CardNumber("5500 0000 0000 0002") shouldBe 
       Invalid(Chain(CardNumberInvalidLuhnSum))
   }
+
+  "CardNumber.issuerId" should "be correct" in {
+    import homework7.Homework7.CardNumber.IssuerId._
+
+    CardNumber("5500 0000 0000 0004").leftSideValue.valueOr(null).issuerId shouldBe MasterCard
+    CardNumber("4417 1234 5678 9113").leftSideValue.valueOr(null).issuerId shouldBe Visa
+    CardNumber("3400 0000 0000 009").leftSideValue.valueOr(null).issuerId shouldBe Amex
+  }
 }
