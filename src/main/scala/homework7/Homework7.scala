@@ -91,7 +91,8 @@ object Homework7 {
     def checkNumbersValidity (number: String): AllErrorsOr[String] = {
       val strippedN = number.replaceAll("\\s+", "")
       val appendedN =
-        if (strippedN.length == 15) "0" + strippedN 
+        if (strippedN.length == 15) 
+          "0" + strippedN 
         else strippedN
 
       val luhnsSum = appendedN.grouped(2).map(
@@ -103,10 +104,10 @@ object Homework7 {
         case (acc, (ev, od)) => acc + ev + od
       }
 
-      luhnsSum % 10 == 0 match {
-        case true  => number.validNec
-        case false => CardNumberInvalidLuhnSum.invalidNec
-      }
+      if (luhnsSum % 10 == 0) 
+        number.validNec
+      else 
+        CardNumberInvalidLuhnSum.invalidNec
     }
       
     def apply (number: String): AllErrorsOr[CardNumber] = 
