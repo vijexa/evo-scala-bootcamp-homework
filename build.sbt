@@ -48,6 +48,8 @@ val akkaHttpCirceVersion = "1.31.0"
 
 val log4CatsVersion = "1.1.1"
 
+val enumeratumVersion = "1.6.1"
+
 libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % catsVersion,
   "org.http4s" %% "http4s-dsl" % http4sVersion,
@@ -77,6 +79,7 @@ libraryDependencies ++= Seq(
   "org.mockito" %% "mockito-scala" % "1.15.0" % Test,
   "org.scalaj" %% "scalaj-http" % "2.4.2" % Test,
   "org.tpolecat" %% "doobie-scalatest" % doobieVersion % Test,
+  "com.beachape" %% "enumeratum" % enumeratumVersion
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
