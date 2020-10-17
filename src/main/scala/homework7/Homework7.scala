@@ -24,13 +24,12 @@ object Homework7 {
     case object CardholderNameInvalidFormat extends ValidationError
     
     case object CardNumberInvalidIssuer extends ValidationError
+    case object CardNumberInvalidIssuerDigitsNumber extends ValidationError
     case object CardNumberInvalidLuhnSum extends ValidationError
     case object CardNumberInvalidFormat extends ValidationError
   }
 
-  class CardholderName private (_name: String){
-    val name = _name
-  }
+  class CardholderName private (val name: String)
   object CardholderName {
     import ValidationError._
 
@@ -52,46 +51,77 @@ object Homework7 {
       )
   }
 
-  class CardNumber private (_number: String, _issuerId: CardNumber.IssuerId) {
-    val number = _number
-    val issuerId = _issuerId
-  }
+  class CardNumber private (val number: String, val issuerId: CardNumber.IssuerId)
   object CardNumber{
+    import scala.language.implicitConversions
     import ValidationError._
 
-    sealed trait IssuerId extends EnumEntry {val regex: Regex} 
+    class StrippedString private (val str: String) extends AnyVal
+    object StrippedString {
+      def apply (str: String) = new StrippedString(str.replaceAll("\\s+", ""))
+    }
+    implicit val StrippedStringToString: StrippedString => String = _.str
+
+    sealed trait IssuerId extends EnumEntry {
+      val regex: Regex
+      val digitsN: Range
+    } 
     object IssuerId extends Enum[IssuerId] {
       val values = findValues
 
-      def apply(number: String): Option[IssuerId] =
-        values.find(_.regex matches number)
-
-      case object Visa extends IssuerId {val regex = "^4.+".r} 
-      case object MasterCard extends IssuerId {val regex = "^5[1-5].+".r} 
-      case object Discover extends IssuerId {val regex = "^((6011)|(644)|(65)).+".r} 
-      case object Amex  extends IssuerId{val regex = "^((34)|(37)).+.+".r} 
+      def apply(number: StrippedString): Either[ValidationError, IssuerId] =
+        values.find(_.regex matches number) match {
+          case Some(issuer) => 
+            if (issuer.digitsN contains number.length) 
+              issuer.asRight
+            else CardNumberInvalidIssuerDigitsNumber.asLeft
+          case None => CardNumberInvalidIssuer.asLeft
+        }
+      
+      // I guess this is a bit naive approach, but this homework
+      // is not intended to be used IRL 😅
+      case object Visa extends IssuerId {
+        val regex = "^4.+".r
+        val digitsN = 16 to 16
+      } 
+      case object MasterCard extends IssuerId {
+        val regex = "^5[1-5].+".r
+        val digitsN = 16 to 16
+      } 
+      case object Discover extends IssuerId {
+        val regex = "^((6011)|(644)|(65)).+".r 
+        val digitsN = 16 to 19
+      } 
+      case object Amex extends IssuerId {
+        val regex = "^((34)|(37)).+".r
+        val digitsN = 15 to 15
+      }
+      case object Maestro extends IssuerId {
+        val regex = "^((50)|(5[6-9])|(6[0-9])).+".r
+        val digitsN = 12 to 19
+      } 
       /* and so on */ 
     }
 
-    // should have 16 or 15 digits in blocks by 4 separated by space
-    // I'll pretend that credit cards with less than 15 digits do not
-    // exist to not overcomplicate this homework further
-    def checkFormat (number: String): AllErrorsOr[String] =
-      if (number matches "^([0-9]{4} ){3}([0-9]{3,4})$") number.validNec
+    def checkFormat (number: String): AllErrorsOr[StrippedString] = {
+      val stripped = StrippedString(number)
+      if ((12 to 19 contains stripped.length) && (stripped matches "^[0-9]+$"))
+        stripped.validNec
       else CardNumberInvalidFormat.invalidNec
+    }
     
-    def checkIssuerValidity (number: String): AllErrorsOr[IssuerId] =
+    def checkIssuerValidity (number: StrippedString): AllErrorsOr[IssuerId] =
       IssuerId(number) match {
-        case Some(value) => value.validNec
-        case None => CardNumberInvalidIssuer.invalidNec
+        case Right(issuer) => issuer.validNec
+        case Left(err) => err.invalidNec
       }
   
     // algorithm from here:
     // https://7labs.io/tips-tricks/check-validity-of-credit-card-number.html
-    def checkNumbersValidity (number: String): AllErrorsOr[String] = {
-      val strippedN = number.replaceAll("\\s+", "")
-      val appendedN =
-        if (strippedN.length == 15) 
+    def checkNumbersValidity (number: StrippedString): AllErrorsOr[String] = {
+      val strippedN = number.str
+      val appendedN: String =
+        if (strippedN.length % 2 != 0) 
           "0" + strippedN 
         else strippedN
 
@@ -105,7 +135,7 @@ object Homework7 {
       }
 
       if (luhnsSum % 10 == 0) 
-        number.validNec
+        strippedN.validNec
       else 
         CardNumberInvalidLuhnSum.invalidNec
     }

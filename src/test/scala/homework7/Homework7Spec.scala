@@ -38,6 +38,10 @@ class Homework7Spec extends AnyFlatSpec with should.Matchers {
     CardNumber("5500 0000 0000 0004").isValid shouldBe true
     CardNumber("6440 0000 0000 0005").isValid shouldBe true
     CardNumber("3400 0000 0000 009").isValid shouldBe true
+    CardNumber("6100 0000 0000 2").isValid shouldBe true
+    CardNumber("6100 0000 0006").isValid shouldBe true
+    CardNumber("610000000006").isValid shouldBe true
+    CardNumber("6100 0000 0000 0000 002").isValid shouldBe true
   }
 
   "CardNumber.apply" should "return correct chain of errors" in {
@@ -61,6 +65,13 @@ class Homework7Spec extends AnyFlatSpec with should.Matchers {
 
     CardNumber("4417 1234 5678 9113 1212") shouldBe 
       Invalid(Chain(CardNumberInvalidFormat))
+      
+    CardNumber("6100 0000 0000 0000 0006") shouldBe 
+      Invalid(Chain(CardNumberInvalidFormat))
+    
+    // mastercard should be only 16 digits long
+    CardNumber("5500 0000 0000 04") shouldBe 
+      Invalid(Chain(CardNumberInvalidIssuerDigitsNumber))
   }
 
   "CardNumber.issuerId" should "be correct" in {
