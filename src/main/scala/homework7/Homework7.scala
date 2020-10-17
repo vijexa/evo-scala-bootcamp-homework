@@ -1,6 +1,5 @@
 package homework7
 
-import shapeless.ops.fin
 
 
 // Homework. Place the solution under `error_handling` package in your homework repository.
@@ -14,6 +13,9 @@ object Homework7 {
   import cats.syntax.all._
   import scala.util.matching.Regex
   import enumeratum._
+  import java.time.format.DateTimeFormatter
+  import java.time.YearMonth
+  import scala.util.Try
 
   type AllErrorsOr[A] = ValidatedNec[ValidationError, A]
 
@@ -27,6 +29,9 @@ object Homework7 {
     case object CardNumberInvalidIssuerDigitsNumber extends ValidationError
     case object CardNumberInvalidLuhnSum extends ValidationError
     case object CardNumberInvalidFormat extends ValidationError
+
+    case object ExpirationDateInvalidFormat extends ValidationError
+    case object ExpirationDateExpired extends ValidationError
   }
 
   class CardholderName private (val name: String)
@@ -113,7 +118,7 @@ object Homework7 {
     def checkIssuerValidity (number: StrippedString): AllErrorsOr[IssuerId] =
       IssuerId(number) match {
         case Right(issuer) => issuer.validNec
-        case Left(err) => err.invalidNec
+        case Left(err)     => err.invalidNec
       }
   
     // algorithm from here:
@@ -148,6 +153,28 @@ object Homework7 {
       )
       
   }
+
+  class ExpirationDate private (val date: YearMonth)
+  object ExpirationDate {
+    import ValidationError._
+
+    val format = DateTimeFormatter.ofPattern("MM/yy")
+
+    def parse (date: String) = 
+      Try(YearMonth.parse(date, format) plusYears 2000).toOption
+
+    def apply (
+      date: String, 
+      currentDate: YearMonth = YearMonth.now()
+    ): AllErrorsOr[ExpirationDate] = 
+      parse(date) match {
+        case Some(date) => 
+          if (date isBefore currentDate) ExpirationDateExpired.invalidNec
+          else new ExpirationDate(date).validNec 
+        case None       => ExpirationDateInvalidFormat.invalidNec
+      }
+  }
+
 
   case class PaymentCard(/* Add parameters as needed */)
 

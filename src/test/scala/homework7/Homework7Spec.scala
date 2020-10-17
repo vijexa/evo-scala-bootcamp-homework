@@ -9,6 +9,8 @@ import cats.data.Validated.Valid
 import cats.data.Validated.Invalid
 import cats.data.Chain
 
+import scala.util.chaining._
+
 class Homework7Spec extends AnyFlatSpec with should.Matchers {
   import homework7.Homework7._
   import homework7.Homework7.ValidationError._
@@ -81,4 +83,45 @@ class Homework7Spec extends AnyFlatSpec with should.Matchers {
     CardNumber("4417 1234 5678 9113").valueOr(null).issuerId shouldBe Visa
     CardNumber("3400 0000 0000 009").valueOr(null).issuerId shouldBe Amex
   }
+
+  {
+    import java.time.format.DateTimeFormatter
+    import java.time.YearMonth
+
+    val format = DateTimeFormatter.ofPattern("MM/yy")
+
+    def parseAndValidate (expDate: String, currDate: String) = 
+      ExpirationDate(expDate, YearMonth.parse(currDate, format) plusYears 2000)//.tap(println)
+
+    "ExpirationDate.apply" should "return validated ExpirationDate" in {
+      parseAndValidate("09/20", "08/20").isValid shouldBe true
+      parseAndValidate("08/19", "06/17").isValid shouldBe true
+      parseAndValidate("10/78", "03/60").isValid shouldBe true
+      parseAndValidate("12/20", "12/20").isValid shouldBe true
+    }
+
+    "ExpirationDate.apply" should "return correct chain of errors" in {
+      parseAndValidate("sdf", "12/20") shouldBe 
+        Invalid(Chain(ExpirationDateInvalidFormat))
+
+      parseAndValidate("13/20", "12/20") shouldBe 
+        Invalid(Chain(ExpirationDateInvalidFormat))
+
+      parseAndValidate("10/2020", "12/20") shouldBe 
+        Invalid(Chain(ExpirationDateInvalidFormat))
+
+      parseAndValidate("00/20", "12/20") shouldBe 
+        Invalid(Chain(ExpirationDateInvalidFormat))
+
+      parseAndValidate("2/20", "12/20") shouldBe 
+        Invalid(Chain(ExpirationDateInvalidFormat))
+
+
+      parseAndValidate("11/20", "12/20") shouldBe 
+        Invalid(Chain(ExpirationDateExpired))
+      parseAndValidate("11/20", "12/56") shouldBe 
+        Invalid(Chain(ExpirationDateExpired))
+    }
+  }
+  
 }
