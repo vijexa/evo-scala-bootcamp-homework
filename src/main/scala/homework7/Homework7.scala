@@ -32,6 +32,9 @@ object Homework7 {
 
     case object ExpirationDateInvalidFormat extends ValidationError
     case object ExpirationDateExpired extends ValidationError
+
+    case object SecurityCodeInvalidFormat extends ValidationError
+    case object SecurityCodeInvalidLength extends ValidationError
   }
 
   class CardholderName private (val name: String)
@@ -70,6 +73,7 @@ object Homework7 {
     sealed trait IssuerId extends EnumEntry {
       val regex: Regex
       val digitsN: Range
+      val secCodeN: Int
     } 
     object IssuerId extends Enum[IssuerId] {
       val values = findValues
@@ -88,22 +92,27 @@ object Homework7 {
       case object Visa extends IssuerId {
         val regex = "^4.+".r
         val digitsN = 16 to 16
+        val secCodeN = 3
       } 
       case object MasterCard extends IssuerId {
         val regex = "^5[1-5].+".r
         val digitsN = 16 to 16
+        val secCodeN = 3
       } 
       case object Discover extends IssuerId {
         val regex = "^((6011)|(644)|(65)).+".r 
         val digitsN = 16 to 19
+        val secCodeN = 3
       } 
       case object Amex extends IssuerId {
         val regex = "^((34)|(37)).+".r
         val digitsN = 15 to 15
+        val secCodeN = 4
       }
       case object Maestro extends IssuerId {
         val regex = "^((50)|(5[6-9])|(6[0-9])).+".r
         val digitsN = 12 to 19
+        val secCodeN = 3
       } 
       /* and so on */ 
     }
@@ -175,6 +184,20 @@ object Homework7 {
       }
   }
 
+  class SecurityCode private (val code: String)
+  object SecurityCode {
+    import  ValidationError._
+
+    def apply (
+      code: String,
+      issuer: CardNumber.IssuerId
+    ): AllErrorsOr[SecurityCode] =
+      if (code matches "^[0-9]{3,4}+$")
+        if (code.length == issuer.secCodeN)
+          new SecurityCode(code).validNec
+        else SecurityCodeInvalidLength.invalidNec
+      else SecurityCodeInvalidFormat.invalidNec
+  }
 
   case class PaymentCard(/* Add parameters as needed */)
 

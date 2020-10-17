@@ -123,5 +123,37 @@ class Homework7Spec extends AnyFlatSpec with should.Matchers {
         Invalid(Chain(ExpirationDateExpired))
     }
   }
+
+  {
+    import CardNumber.IssuerId._
+
+    "SecurityCode.apply" should "return validated security code" in {
+      SecurityCode("123", MasterCard).isValid shouldBe true
+      SecurityCode("345", Visa).isValid shouldBe true
+      SecurityCode("4736", Amex).isValid shouldBe true
+    }
+
+    "SecurityCode.apply" should "return correct chain of errors" in {
+      SecurityCode("123", Amex) shouldBe 
+        Invalid(Chain(SecurityCodeInvalidLength))
+
+      SecurityCode("3455", Visa) shouldBe 
+        Invalid(Chain(SecurityCodeInvalidLength))
+
+      SecurityCode("4736", MasterCard) shouldBe 
+        Invalid(Chain(SecurityCodeInvalidLength))
+
+        
+      SecurityCode("2hg45", Discover) shouldBe 
+        Invalid(Chain(SecurityCodeInvalidFormat))
+
+      SecurityCode("", Discover) shouldBe 
+        Invalid(Chain(SecurityCodeInvalidFormat))
+
+      SecurityCode("12", Discover) shouldBe 
+        Invalid(Chain(SecurityCodeInvalidFormat))
+    }
+
+  }
   
 }
