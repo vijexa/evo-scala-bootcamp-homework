@@ -1,5 +1,7 @@
 package homework7
 
+import cats.data.Validated.Valid
+import cats.data.Validated.Invalid
 
 
 // Homework. Place the solution under `error_handling` package in your homework repository.
@@ -9,6 +11,7 @@ package homework7
 // 3. Implement `validate` method to construct `PaymentCard` instance from the supplied raw data.
 object Homework7 {
 
+  import scala.util.chaining._
   import cats.data.ValidatedNec
   import cats.syntax.all._
   import scala.util.matching.Regex
@@ -170,7 +173,7 @@ object Homework7 {
     val format = DateTimeFormatter.ofPattern("MM/yy")
 
     def parse (date: String) = 
-      Try(YearMonth.parse(date, format) plusYears 2000).toOption
+      Try(YearMonth.parse(date, format)).toOption
 
     def apply (
       date: String, 
@@ -186,29 +189,55 @@ object Homework7 {
 
   class SecurityCode private (val code: String)
   object SecurityCode {
-    import  ValidationError._
+    import ValidationError._
+    import CardNumber.IssuerId
+    import CardNumber.IssuerId._
 
+    // issuer is an option to allow to check security code format
+    // even when CardNumber is invalid and IssuerId was not obtained
     def apply (
       code: String,
-      issuer: CardNumber.IssuerId
+      issuer: Option[IssuerId]
     ): AllErrorsOr[SecurityCode] =
       if (code matches "^[0-9]{3,4}+$")
-        if (code.length == issuer.secCodeN)
-          new SecurityCode(code).validNec
-        else SecurityCodeInvalidLength.invalidNec
+        issuer match {
+          case Some(issuer) => 
+            if (code.length == issuer.secCodeN)
+              new SecurityCode(code).validNec
+            else SecurityCodeInvalidLength.invalidNec
+          case None => new SecurityCode(code).validNec
+        }
       else SecurityCodeInvalidFormat.invalidNec
   }
 
-  case class PaymentCard(/* Add parameters as needed */)
+  class PaymentCard private (
+    val cardHolderName: CardholderName,
+    val cardNumber: CardNumber,
+    val expirationDate: ExpirationDate,
+    val securityCode: SecurityCode
+  )
 
-  object PaymentCardValidator {
-
-
-    def validate(
+  object PaymentCard {
+    def apply(
       name: String,
       number: String,
       expirationDate: String,
       securityCode: String,
-    ): AllErrorsOr[PaymentCard] = ???
+    ): AllErrorsOr[PaymentCard] = {
+      val cardNumber = CardNumber(number)
+
+      (
+        CardholderName(name),
+        cardNumber, 
+        ExpirationDate(expirationDate),
+        SecurityCode(
+          securityCode, 
+          cardNumber match {
+            case Valid(value) => value.issuerId.some
+            case Invalid(_) => None
+          }
+        )
+      ) mapN (new PaymentCard(_, _, _, _))
+    }
   }
 }

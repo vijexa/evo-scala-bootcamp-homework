@@ -8,6 +8,7 @@ import matchers._
 import cats.data.Validated.Valid
 import cats.data.Validated.Invalid
 import cats.data.Chain
+import cats.syntax.all._
 
 import scala.util.chaining._
 
@@ -91,7 +92,7 @@ class Homework7Spec extends AnyFlatSpec with should.Matchers {
     val format = DateTimeFormatter.ofPattern("MM/yy")
 
     def parseAndValidate (expDate: String, currDate: String) = 
-      ExpirationDate(expDate, YearMonth.parse(currDate, format) plusYears 2000)//.tap(println)
+      ExpirationDate(expDate, YearMonth.parse(currDate, format))//.tap(println)
 
     "ExpirationDate.apply" should "return validated ExpirationDate" in {
       parseAndValidate("09/20", "08/20").isValid shouldBe true
@@ -128,32 +129,106 @@ class Homework7Spec extends AnyFlatSpec with should.Matchers {
     import CardNumber.IssuerId._
 
     "SecurityCode.apply" should "return validated security code" in {
-      SecurityCode("123", MasterCard).isValid shouldBe true
-      SecurityCode("345", Visa).isValid shouldBe true
-      SecurityCode("4736", Amex).isValid shouldBe true
+      SecurityCode("123", MasterCard.some).isValid shouldBe true
+      SecurityCode("345", Visa.some).isValid shouldBe true
+      SecurityCode("4736", Amex.some).isValid shouldBe true
     }
 
     "SecurityCode.apply" should "return correct chain of errors" in {
-      SecurityCode("123", Amex) shouldBe 
+      SecurityCode("123", Amex.some) shouldBe 
         Invalid(Chain(SecurityCodeInvalidLength))
 
-      SecurityCode("3455", Visa) shouldBe 
+      SecurityCode("3455", Visa.some) shouldBe 
         Invalid(Chain(SecurityCodeInvalidLength))
 
-      SecurityCode("4736", MasterCard) shouldBe 
+      SecurityCode("4736", MasterCard.some) shouldBe 
         Invalid(Chain(SecurityCodeInvalidLength))
 
         
-      SecurityCode("2hg45", Discover) shouldBe 
+      SecurityCode("2hg45", Discover.some) shouldBe 
         Invalid(Chain(SecurityCodeInvalidFormat))
 
-      SecurityCode("", Discover) shouldBe 
+      SecurityCode("", Discover.some) shouldBe 
         Invalid(Chain(SecurityCodeInvalidFormat))
 
-      SecurityCode("12", Discover) shouldBe 
+      SecurityCode("12", Discover.some) shouldBe 
+        Invalid(Chain(SecurityCodeInvalidFormat))
+
+      SecurityCode("dfhj", None) shouldBe 
         Invalid(Chain(SecurityCodeInvalidFormat))
     }
+  }
 
+  {
+    import CardNumber.IssuerId._
+
+    "PaymentCard.apply" should "return validated PaymentCard" in {
+      PaymentCard("Name Surname", "4417 1234 5678 9113", "12/40", "123").isValid shouldBe true
+      PaymentCard("Name Surname Middlename", "610000000006", "12/50", "764").isValid shouldBe true
+    }
+
+    "PaymentCard.apply" should "return correct chain of errors" in {
+      PaymentCard("Name Surname Middlename adgad", "610000000006", "12/50", "764") shouldBe 
+        Invalid(Chain(CardholderNameTooLong, CardholderNameInvalidFormat))
+
+      PaymentCard("1", "610000000006", "12/50", "764") shouldBe 
+        Invalid(Chain(CardholderNameTooShort, CardholderNameInvalidFormat)) 
+
+      PaymentCard("Name Surname Middlename adgad", "610000000006", "12/50", "7645") shouldBe 
+        Invalid(Chain(CardholderNameTooLong, CardholderNameInvalidFormat, SecurityCodeInvalidLength))
+
+      PaymentCard("Name Surname Middlename adgad", "610000000006", "12/10", "7645") shouldBe 
+        Invalid(
+          Chain(
+            CardholderNameTooLong, 
+            CardholderNameInvalidFormat, 
+            ExpirationDateExpired, 
+            SecurityCodeInvalidLength
+          )
+        )
+
+      PaymentCard("Name Surname Middlename adgad", "610000000006", "12/10", "sdhfg") shouldBe 
+        Invalid(
+          Chain(
+            CardholderNameTooLong, 
+            CardholderNameInvalidFormat, 
+            ExpirationDateExpired,
+            SecurityCodeInvalidFormat
+          )
+        )
+
+      PaymentCard("Name Surname Middlename adgad", "6100000006", "12/10", "7645") shouldBe 
+        Invalid(
+          Chain(
+            CardholderNameTooLong, 
+            CardholderNameInvalidFormat, 
+            CardNumberInvalidFormat, 
+            ExpirationDateExpired
+          )
+        )
+      
+      PaymentCard("Name Surname Middlename adgad", "6100000006", "12/10", "dsgfg") shouldBe 
+        Invalid(
+          Chain(
+            CardholderNameTooLong, 
+            CardholderNameInvalidFormat, 
+            CardNumberInvalidFormat, 
+            ExpirationDateExpired,
+            SecurityCodeInvalidFormat
+          )
+        )
+      
+      PaymentCard("Name Surname Middlename adgad", "6100000006", "dfgh", "dsgfg") shouldBe 
+        Invalid(
+          Chain(
+            CardholderNameTooLong, 
+            CardholderNameInvalidFormat, 
+            CardNumberInvalidFormat, 
+            ExpirationDateInvalidFormat,
+            SecurityCodeInvalidFormat
+          )
+        )
+    }
   }
   
 }
