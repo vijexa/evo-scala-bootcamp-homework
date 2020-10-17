@@ -177,6 +177,17 @@ class Homework7Spec extends AnyFlatSpec with should.Matchers {
       PaymentCard("Name Surname Middlename adgad", "610000000006", "12/50", "7645") shouldBe 
         Invalid(Chain(CardholderNameTooLong, CardholderNameInvalidFormat, SecurityCodeInvalidLength))
 
+      
+      PaymentCard("Name Surname Middlename adgad", "100000000001", "12/50", "7645") shouldBe 
+        Invalid(
+          Chain(
+            CardholderNameTooLong, 
+            CardholderNameInvalidFormat, 
+            CardNumberInvalidLuhnSum, 
+            CardNumberInvalidIssuer
+          )
+        )
+
       PaymentCard("Name Surname Middlename adgad", "610000000006", "12/10", "7645") shouldBe 
         Invalid(
           Chain(
