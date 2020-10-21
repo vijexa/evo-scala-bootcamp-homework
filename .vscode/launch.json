@@ -46,5 +46,11 @@
             "name": "homework7",
             "testClass": "homework7.Homework7Spec"
         },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "homework8",
+            "testClass": "homework8.Homework8Spec"
+        },
     ]
 }
