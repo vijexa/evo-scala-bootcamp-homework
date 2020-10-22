@@ -65,15 +65,9 @@ object Homework8Spec {
     ) leftMap (err => s"Cannot parse LocalDate: $err")
   )
 
-  implicit val teamTotalsConfig: Configuration = Configuration.default.copy(
-    transformMemberNames = {
-      case "fullTimeoutRemaining" => "full_timeout_remaining"
-      case v => v
-    }
-  )
-
-  @ConfiguredJsonCodec final case class TeamTotals(assists: String, fullTimeoutRemaining: String, plusMinus: String)
-
+  implicit val config: Configuration = Configuration.default
+  
+  @ConfiguredJsonCodec final case class TeamTotals(assists: String, @JsonKey("full_timeout_remaining") fullTimeoutRemaining: String, plusMinus: String)
   @JsonCodec final case class TeamBoxScore(totals: TeamTotals)
   @JsonCodec final case class GameStats(hTeam: TeamBoxScore, vTeam: TeamBoxScore)
   @JsonCodec final case class PrevMatchup(gameDate: LocalDate, gameId: String)
