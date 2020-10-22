@@ -16,6 +16,8 @@ import scalaj.http.Http
 
 import io.circe.Decoder
 import cats.syntax.either._
+import io.circe.generic.extras._
+import io.circe.syntax._
 
 /**
  * 
@@ -63,7 +65,15 @@ object Homework8Spec {
     ) leftMap (err => s"Cannot parse LocalDate: $err")
   )
 
-  @JsonCodec final case class TeamTotals(assists: String, full_timeout_remaining: String, plusMinus: String)
+  implicit val teamTotalsConfig: Configuration = Configuration.default.copy(
+    transformMemberNames = {
+      case "fullTimeoutRemaining" => "full_timeout_remaining"
+      case v => v
+    }
+  )
+
+  @ConfiguredJsonCodec final case class TeamTotals(assists: String, fullTimeoutRemaining: String, plusMinus: String)
+
   @JsonCodec final case class TeamBoxScore(totals: TeamTotals)
   @JsonCodec final case class GameStats(hTeam: TeamBoxScore, vTeam: TeamBoxScore)
   @JsonCodec final case class PrevMatchup(gameDate: LocalDate, gameId: String)
