@@ -48,7 +48,7 @@ val hFinder: (Char, String) => Boolean =
 ```
 `findCharWithFinder` returns true if char exists in a string, and false if it does not. For char comparison it uses function `f` passed as a parameter. 
 
-You can tell that those functions are mutually recursive. Furthermore, they are actually tail-recursive in relation to each other! In every one of those function call is the last thing this function does. So, they should be optimised by compiler and be stack-safe? Wrong.
+You can tell that those functions are mutually recursive. Furthermore, they are actually tail-recursive in relation to each other! In every one of those function call is the last thing this function does. So, they should be optimised by compiler and be stack-safe, right? Wrong.
 ```scala
 findCharWithFinder(
   fFinder,
@@ -77,7 +77,7 @@ val evalNow = Eval.now {
 }
 ```
 ### Eval.later
-`Eval.later` creates an Eval, which value is evaluated... later, when we access it. After evaluation it is memoized (cached), so it is evaluated only one time. It is comparable to `lazy val`. This computation is called "lazy and memoized".
+`Eval.later` creates an Eval, which value is evaluated... later, when we access it. After evaluation it is memoized (cached), so it is evaluated only once. It is comparable to `lazy val`. This computation is described as "lazy and memoized".
 ```scala
 val evalLater = Eval.later {
   println(">>>Evaluating evalLater...")
@@ -85,13 +85,14 @@ val evalLater = Eval.later {
 }
 ```
 ### Eval.always
-`Eval.always` creates an Eval, which value is evaluated every time you access it. It is never memoized. You can compare it to `def`. It is a "lazy" computation.
+`Eval.always` creates an Eval, which value is evaluated every time you access it. It is never memoized by default. You can compare it to `def`. It is a "lazy" computation.
 ```scala
 val evalAlways = Eval.always {
   println(">>>Evaluating evalAlways...")
   superExpensiveCalculation(2, 2)
 }
 ```
+### Example
 You can access value stored in Eval with `Eval.value`. Let's see this behaviour in action: 
 ```scala
 println("Evals are already initialised but their value haven't been used yet")
@@ -176,7 +177,7 @@ object UsingEval {
       }
 }
 ```
-First of all, all our functions return `Eval[Boolean]` now. We are not returning `Boolean`! We are returning a monad `Eval` that contains some value of `Boolean`. Secondly, we are evaluating our comparison in `Eval.always`. This trick let's us to defer actual execution without blowing up the stack. You can also use `Eval.now` or `Eval.later` in this casem it's not very important. Finally, our main trick here is that we are using `flatMap`. `Eval` is a monad, and like every well mannered monad it can be flatMapped over it to extract its value and return another instance of this monad. The special thing about `Eval.flatMap` is that it is lazy and therefore **stack-safe**. Here is what is written about it in the source code:
+First of all, all our functions return `Eval[Boolean]` now. We are not returning `Boolean`! We are returning a monad `Eval` that contains some value of `Boolean`. Secondly, we are evaluating our comparison in `Eval.always`, which gives us an Eval that we can use.  You can also use `Eval.now` or `Eval.later` in this case it's not very important. Finally, our main trick here is that we are using `flatMap`. `Eval` is a monad, and like every well mannered monad it can be flatMapped over it to extract its value and return another instance of this monad. The special thing about `Eval.flatMap` is that it is lazy and therefore **stack-safe**. This trick let's us to defer actual execution without blowing up the stack. Here is what is written about it in the source code:
 ```scala
 /**
  * Lazily perform a computation based on an Eval[A], using the
@@ -192,7 +193,7 @@ First of all, all our functions return `Eval[Boolean]` now. We are not returning
  */
 def flatMap[B](f: A => Eval[B]): Eval[B]
 ```
-Everything we write in passed to `flatMap` function is evaluated lazily! Amazing! In fact, as seen from `flatMap` signature, it returns another Eval (well, that's almost a definition for monad). Same laziness rule applies to `map` too. Let's run it now:
+Everything we write in passed to `flatMap` function is evaluated lazily! Amazing! In fact, as seen from `flatMap` signature, it returns another Eval (well, that's almost a definition for monad). Same laziness rule applies to `map` too. Let's try it now:
 ```scala
 val string = List.fill(1_000)("abcdefg").mkString
 
@@ -241,7 +242,7 @@ Finding h without using eval: Oops, stackoverflow
 Finding f with eval: true
 Finding h with eval: false
 ```
-As you can see, everything works as expected. Regulare recursion indeed throws an exception, while our lazy recursion using Eval reliably evaluates to Boolean.
+As you can see, everything works as expected. Regular recursion indeed throws an exception, while our lazy recursion using Eval reliably evaluates to Boolean.
 
 Let's imagine that we want to implement factorial function, but for some reason we cannot or don't want to use tail recursion. Let's try to implement it like in first example:
 ### Example #2
@@ -291,14 +292,14 @@ The algorithm itself hasn't changed, but now we are using monadic function `map`
 
 ### Eval.defer
 
-Actually, there is a method called `Eval.defer` that allows us to do the same thing but cleaner. Let's rewrite our factorial with it: 
+Actually, there is a method called `Eval.defer` that allows us to do the same thing but cleaner. Let's rewrite our factorial using it: 
 ```scala
 def factorialEval (x: BigInt): Eval[BigInt] =
   if (x == 0) Eval.now(1)
   else
     Eval.defer(factorialEval(x - 1).map(_ * x)) 
 ```
-What is `Eval.defer`? Let's look at its signature:
+What `Eval.defer does`? Let's look at its signature:
 ```scala
 def defer[A](a: => Eval[A]): Eval[A]
 ```
@@ -309,13 +310,13 @@ def factorialEval (x: BigInt): Eval[BigInt] =
   else
     factorialEval(x - 1).map(_ * x)
 ```
-Long story short, this results in stack overflow. But why, have I lied to you about stack safety? Well, let's look at this method a bit closer. What happens here is that we haven't hidden our actual recursion into any `Eval`! `factorialEval(x - 1)` is not lazy and it never was! So, each "iteration" we are explicitly going deeper into recursion, without deferring it. This results in stack overflow. `Eval.defer`, as well as `Eval.flatMap` helps us to prevent this.
+Long story short, this results in stack overflow. But why, have I lied to you about stack safety? Well, let's look at this method a bit closer. What happens here is that we haven't hidden our actual recursion into any `Eval`! `factorialEval(x - 1)` is not lazy and it never was! So, each "iteration" we are explicitly going deeper into recursion, without deferring it. This results in stack overflow. `Eval.defer`, as well as `Eval.flatMap`, helps us to prevent this.
 
 ### Additional example
 [Modified example from Cats documentation](https://github.com/vijexa/evo-scala-bootcamp-homework/blob/master/src/main/scala/homework10/MutualRec1.scala)
 
 ## Eval.memoize
-`Eval.always` can be memoized at any time after its creation. It can be useful if some first part of your computation is very expensive, but can't change in the future, while some last part of your computation is not so expensive, or if it depends on some variable and therefore should be reevaluated every time. We can use `Eval.memoize` for this:
+`Eval.always` can be memoized at any time after its creation. It can be useful if some former part of your computation is very expensive, but can't change in the future, while some latter part of your computation depends on some variable and therefore should be reevaluated every time. We can use `Eval.memoize` for this:
 ### Example
 [Full Code](https://github.com/vijexa/evo-scala-bootcamp-homework/blob/master/src/main/scala/homework10/MemoizeTest.scala)
 ```scala
