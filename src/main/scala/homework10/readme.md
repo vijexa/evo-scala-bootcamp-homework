@@ -2,9 +2,9 @@
 - [Table of Contents](#table-of-contents)
 - [Eval](#eval)
   - [Basic functionality](#basic-functionality)
-        - [Eval.now](#evalnow)
-        - [Eval.later](#evallater)
-        - [Eval.always](#evalalways)
+    - [Eval.now](#evalnow)
+    - [Eval.later](#evallater)
+    - [Eval.always](#evalalways)
   - [Stack-safety](#stack-safety)
     - [Example #1](#example-1)
     - [Example #2](#example-2)
@@ -68,7 +68,7 @@ import cats.Eval
 def superExpensiveCalculation (a: Int, b: Int) = a + b 
 // good enough
 ```
-##### Eval.now
+### Eval.now
 `Eval.now` is the first way to create Eval. Expression that you pass to it will be evaluated "now", therefore the name. You can compare it to the basic `val`. It is called "eager" computation.
 ```scala
 val evalNow = Eval.now {
@@ -76,7 +76,7 @@ val evalNow = Eval.now {
   superExpensiveCalculation(2, 2)
 }
 ```
-##### Eval.later
+### Eval.later
 `Eval.later` creates an Eval, which value is evaluated... later, when we access it. After evaluation it is memoized (cached), so it is evaluated only one time. It is comparable to `lazy val`. This computation is called "lazy and memoized".
 ```scala
 val evalLater = Eval.later {
@@ -84,7 +84,7 @@ val evalLater = Eval.later {
   superExpensiveCalculation(2, 2)
 }
 ```
-##### Eval.always
+### Eval.always
 `Eval.always` creates an Eval, which value is evaluated every time you access it. It is never memoized. You can compare it to `def`. It is a "lazy" computation.
 ```scala
 val evalAlways = Eval.always {
