@@ -4,6 +4,8 @@ object MutualRec2 extends App {
   import cats.Eval
   import scala.util.chaining._
 
+  val string = List.fill(1_000)("abcdefg").mkString
+
   object NoEval {
     def findCharWithFinder (
       f: (Char, String) => Boolean,
@@ -28,7 +30,7 @@ object MutualRec2 extends App {
     println(
       NoEval.findCharWithFinder (
         NoEval.fFinder,
-        List.fill(1_000)("abcdefg").mkString
+        string
       ) // returns true
     )
 
@@ -36,7 +38,7 @@ object MutualRec2 extends App {
     println(
       NoEval.findCharWithFinder(
         NoEval.hFinder,
-        List.fill(1_000)("abcdefg").mkString
+        string
       ) // throws StackOverflowException
     )
   } catch {
@@ -72,7 +74,7 @@ object MutualRec2 extends App {
   println(
     UsingEval.findCharWithFinder (
       UsingEval.fFinder,
-      List.fill(1_000)("abcdefg").mkString
+      string
     ).value
   ) // returns true
 
@@ -80,7 +82,7 @@ object MutualRec2 extends App {
   println(
     UsingEval.findCharWithFinder (
       UsingEval.hFinder,
-      List.fill(1_000)("abcdefg").mkString
+      string
     ).value
   ) // returns false, and no stack overflow!
 

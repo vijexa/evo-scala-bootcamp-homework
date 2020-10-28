@@ -82,8 +82,9 @@ println(s"evalLater value is ${evalLater.value}")
 println()
 println(s"evalAlways value is ${evalAlways.value}")
 println(s"evalAlways value is ${evalAlways.value}")
-
-/* Program output: 
+```
+```
+Program output: 
 
 >>>Evaluating evalNow...
 Evals are already initialised but their value haven't been used yet
@@ -99,14 +100,12 @@ evalLater value is 4
 evalAlways value is 4
 >>>Evaluating evalAlways...
 evalAlways value is 4
-
-*/
 ```
 As expected, `evalNow` is evaluated only once even before we use it. `evalLater` is not evaluated when we initialise it, but when we use it for the first time. For the second time it uses memoized value. `evalAlways` evaluates it's expression every time it is accessed.
 
 ## Stack-safety
 But why do you care? It seems kind of useless, especially `Eval.now`. Well, turns out Evals have its uses. Let's go back to our mutual recursion, but now we'll use Evals. Let's put previous code that wasn't using eval in an object `NoEval`, and create new object `UsingEval`:
-### Example 1
+### Example #1
 ```scala
 object NoEval {
   def findCharWithFinder (
@@ -168,10 +167,59 @@ First of all, all our functions return `Eval[Boolean]` now. We are not returning
  */
 def flatMap[B](f: A => Eval[B]): Eval[B]
 ```
-Everything we write in passed to `flatMap` function is evaluated lazy! Amazing! In fact, as seen from `flatMap` signature, it returns another Eval (well, that's almost a definition for monad). Same laziness rule applies to `map` too. 
+Everything we write in passed to `flatMap` function is evaluated lazily! Amazing! In fact, as seen from `flatMap` signature, it returns another Eval (well, that's almost a definition for monad). Same laziness rule applies to `map` too. Let's run it now:
+```scala
+val string = List.fill(1_000)("abcdefg").mkString
+
+try {
+  print("Finding f without using eval: ")
+  println(
+    NoEval.findCharWithFinder (
+      NoEval.fFinder,
+      string
+    ) // returns true
+  )
+
+  print("Finding h without using eval: ")
+  println(
+    NoEval.findCharWithFinder(
+      NoEval.hFinder,
+      string
+    ) // throws StackOverflowException
+  )
+} catch {
+  case _: StackOverflowError => println("Oops, stackoverflow")
+}
+
+print("Finding f with eval: ")
+println(
+  UsingEval.findCharWithFinder (
+    UsingEval.fFinder,
+    string
+  ).value
+) // returns true
+
+print("Finding h with eval: ")
+println(
+  UsingEval.findCharWithFinder (
+    UsingEval.hFinder,
+    string
+  ).value
+) // returns false, and no stack overflow!
+
+```
+```
+Program output:
+
+Finding f without using eval: true
+Finding h without using eval: Oops, stackoverflow
+Finding f with eval: true
+Finding h with eval: false
+```
+As you can see, everything works as expected. Regulare recursion indeed throws an exception, while our lazy recursion using Eval reliably evaluates to Boolean.
 
 Let's imagine that we want to implement factorial function, but for some reason we cannot or don't want to use tail recursion. Let's try to implement it like in first example:
-### Example 2
+### Example #2
 ```scala
 import cats.Eval
 
@@ -197,13 +245,15 @@ try {
 } catch {
   case _: StackOverflowError => println("Stack overflow!")
 }
+```
+Factorial of 10000 is a huge value, so I've stripped most of it from output.
+```
+Program output:
 
-/* Program output:
 factorialEval(10000).value: 28462596809170545189064132121198688901480514017027992307941799942744113400037644437729907867577847758158840621423175288300423399401535187....... 
 factorialNoEval(10000): Stack overflow!
-*/
 ```
-Factorial of 10000 is a huge value, so I've stripped most of it from output. So, what happens here? `factorialNoEval` is a regular recursive function, prone to stack overflow. As expected, it cannot calculate factorial of 10000. Now, let's look closer at `factorialEval`.
+ So, what happens here? `factorialNoEval` is a regular recursive function, prone to stack overflow. As expected, it cannot calculate factorial of 10000. Now, let's look closer at `factorialEval`.
 ```scala
 def factorialEval (x: BigInt): Eval[BigInt] =
   Eval.now(x == 0).flatMap{
@@ -211,11 +261,11 @@ def factorialEval (x: BigInt): Eval[BigInt] =
     case false => factorialEval(x - 1).map(_ * x)
   }
 ```
-The algorithm itself hasn't changed, but now we are using monadic function `map` to implement factorial multiplication. As we remember, it is stack safe and lazy for Evals. But it looks kind of... Cumbersome?
+The algorithm itself hasn't changed, but now we are using monadic function `map` to implement factorial multiplication. As we remember, it is stack safe and lazy for Evals. But with `flatMap` this method looks kind of... Cumbersome?
 
 ### Eval.defer
 
-Actually, there is a method called `Eval.defer` that allows us to do the same thing. Let's rewrite our factorial with it: 
+Actually, there is a method called `Eval.defer` that allows us to do the same thing but cleaner. Let's rewrite our factorial with it: 
 ```scala
 def factorialEval (x: BigInt): Eval[BigInt] =
   if (x == 0) Eval.now(1)
@@ -253,8 +303,9 @@ println("Accessing eval for the first time:")
 eval.value
 println("\nAccessing eval for the second time:")
 eval.value
-
-/* Program output:
+```
+```
+Program output:
 
 Accessing eval for the first time:
 First expensive computation
@@ -264,10 +315,12 @@ Fourth expensive computation that depends on some dynamic variable and cannot be
 
 Accessing eval for the second time:
 Fourth expensive computation that depends on some dynamic variable and cannot be memoized
-*/
 ```
 
-## Used sources: 
+## Conclusions
+Eval is a nice tool to make heavy computations on large amounts of data safer. Most of the time Eval is used without you knowing about it, but I think it is important to know what happens under the hood of Cats library.
+
+## Used resources: 
 * Cats.Eval – https://typelevel.org/cats/datatypes/eval.html
 * Demystified Scala Eager Lazy Memoized - How Cats Eval Can Safe Your Recursive Stack For Overflowing – https://edward-huang.com/tech/scala/programming/functional-programming/2020/01/12/demystified-scala-eager-lazy-memoized-how-cats-eval-can-safe-your-recursive-stack-for-overflowing/
 * Trampolining and stack safety in Scala – https://medium.com/@olxc/trampolining-and-stack-safety-in-scala-d8e86474ddfa
