@@ -1,4 +1,23 @@
+# Table of Contents
+- [Table of Contents](#table-of-contents)
+- [Eval](#eval)
+  - [Basic functionality](#basic-functionality)
+        - [Eval.now](#evalnow)
+        - [Eval.later](#evallater)
+        - [Eval.always](#evalalways)
+  - [Stack-safety](#stack-safety)
+    - [Example #1](#example-1)
+    - [Example #2](#example-2)
+    - [Eval.defer](#evaldefer)
+    - [Additional example](#additional-example)
+  - [Eval.memoize](#evalmemoize)
+    - [Example](#example)
+  - [Conclusions](#conclusions)
+  - [Used resources:](#used-resources)
+
 # Eval
+I decided to do my homework about Eval data type. Full code for each example is accessible in this directory.
+
 Eval is one of fundamental data types from Cats library, and it is used a lot inside of it (State, Foldable, etc.). It is designed to provide stack-safe lazy evaluation of your expressions with something that is called trampolining. Trampolining is basically a more advanced implementation of tail recursion. Scala compiler can optimise only a very specific recursive functions. For example, a function that recursively reverses a string:
 ```scala
 def reverse (in: String, out: String): String =
@@ -49,6 +68,7 @@ import cats.Eval
 def superExpensiveCalculation (a: Int, b: Int) = a + b 
 // good enough
 ```
+##### Eval.now
 `Eval.now` is the first way to create Eval. Expression that you pass to it will be evaluated "now", therefore the name. You can compare it to the basic `val`. It is called "eager" computation.
 ```scala
 val evalNow = Eval.now {
@@ -56,6 +76,7 @@ val evalNow = Eval.now {
   superExpensiveCalculation(2, 2)
 }
 ```
+##### Eval.later
 `Eval.later` creates an Eval, which value is evaluated... later, when we access it. After evaluation it is memoized (cached), so it is evaluated only one time. It is comparable to `lazy val`. This computation is called "lazy and memoized".
 ```scala
 val evalLater = Eval.later {
@@ -63,6 +84,7 @@ val evalLater = Eval.later {
   superExpensiveCalculation(2, 2)
 }
 ```
+##### Eval.always
 `Eval.always` creates an Eval, which value is evaluated every time you access it. It is never memoized. You can compare it to `def`. It is a "lazy" computation.
 ```scala
 val evalAlways = Eval.always {
@@ -101,11 +123,14 @@ evalAlways value is 4
 >>>Evaluating evalAlways...
 evalAlways value is 4
 ```
+[Full code of example above](https://github.com/vijexa/evo-scala-bootcamp-homework/blob/master/src/main/scala/homework10/EvalTest.scala)
+
 As expected, `evalNow` is evaluated only once even before we use it. `evalLater` is not evaluated when we initialise it, but when we use it for the first time. For the second time it uses memoized value. `evalAlways` evaluates it's expression every time it is accessed.
 
 ## Stack-safety
 But why do you care? It seems kind of useless, especially `Eval.now`. Well, turns out Evals have its uses. Let's go back to our mutual recursion, but now we'll use Evals. Let's put previous code that wasn't using eval in an object `NoEval`, and create new object `UsingEval`:
 ### Example #1
+[Full code](https://github.com/vijexa/evo-scala-bootcamp-homework/blob/master/src/main/scala/homework10/MutualRec2.scala)
 ```scala
 object NoEval {
   def findCharWithFinder (
@@ -220,6 +245,7 @@ As you can see, everything works as expected. Regulare recursion indeed throws a
 
 Let's imagine that we want to implement factorial function, but for some reason we cannot or don't want to use tail recursion. Let's try to implement it like in first example:
 ### Example #2
+[Full code](https://github.com/vijexa/evo-scala-bootcamp-homework/blob/master/src/main/scala/homework10/EvalFactorial.scala)
 ```scala
 import cats.Eval
 
@@ -285,8 +311,13 @@ def factorialEval (x: BigInt): Eval[BigInt] =
 ```
 Long story short, this results in stack overflow. But why, have I lied to you about stack safety? Well, let's look at this method a bit closer. What happens here is that we haven't hidden our actual recursion into any `Eval`! `factorialEval(x - 1)` is not lazy and it never was! So, each "iteration" we are explicitly going deeper into recursion, without deferring it. This results in stack overflow. `Eval.defer`, as well as `Eval.flatMap` helps us to prevent this.
 
-## Some other things
+### Additional example
+[Modified example from Cats documentation](https://github.com/vijexa/evo-scala-bootcamp-homework/blob/master/src/main/scala/homework10/MutualRec1.scala)
+
+## Eval.memoize
 `Eval.always` can be memoized at any time after its creation. It can be useful if some first part of your computation is very expensive, but can't change in the future, while some last part of your computation is not so expensive, or if it depends on some variable and therefore should be reevaluated every time. We can use `Eval.memoize` for this:
+### Example
+[Full Code](https://github.com/vijexa/evo-scala-bootcamp-homework/blob/master/src/main/scala/homework10/MemoizeTest.scala)
 ```scala
 import cats.Eval
 
