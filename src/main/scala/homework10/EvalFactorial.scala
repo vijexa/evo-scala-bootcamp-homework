@@ -15,7 +15,7 @@ object EvalFactorial extends App {
   def factorialEval1 (x: BigInt): Eval[BigInt] =
     if (x == 0) Eval.now(1)
     else
-      factorialEval1(x - 1).map(_ * x)
+      Eval.defer(factorialEval1(x - 1).map(_ * x))
 
   def factorialEval2 (x: BigInt): Eval[BigInt] =
     Eval.now(x == 0).flatMap{
