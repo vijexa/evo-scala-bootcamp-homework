@@ -4,11 +4,8 @@ import java.net.URL
 import java.util.concurrent.Executors
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
 import scala.io.Source
-import scala.concurrent.Await
-import scala.util.Success
-import scala.util.Failure
+import scala.util.{Success, Failure}
 
 /**
  * Application:
