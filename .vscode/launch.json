@@ -60,5 +60,11 @@
             "args": [],
             "jvmOptions": []
         },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "homework13",
+            "testClass": "homework13.EffectsHomework.EffectsHomeworkSpec"
+        },
     ]
 }
