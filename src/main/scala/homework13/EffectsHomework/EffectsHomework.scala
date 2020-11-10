@@ -47,26 +47,20 @@ object EffectsHomework {
 
     def option: IO[Option[A]] = redeem(_ => None, Some(_))
 
-    def handleErrorWith[AA >: A](f: Throwable => IO[AA]): IO[AA] = attempt.flatMap(
-      _ match {
-        case Left(value)  => f(value)
-        case Right(value) => IO(value)
-      }
-    )
+    def handleErrorWith[AA >: A](f: Throwable => IO[AA]): IO[AA] = attempt.flatMap{
+      case Left(value)  => f(value)
+      case Right(value) => IO(value)
+    }
 
-    def redeem[B](recover: Throwable => B, map: A => B): IO[B] = attempt.map(
-      _ match {
-        case Left(value)  => recover(value)
-        case Right(value) => map(value)
-      }
-    )
+    def redeem[B](recover: Throwable => B, map: A => B): IO[B] = attempt.map{
+      case Left(value)  => recover(value)
+      case Right(value) => map(value)
+    }
 
-    def redeemWith[B](recover: Throwable => IO[B], bind: A => IO[B]): IO[B] = attempt.flatMap(
-      _ match {
-        case Left(value)  => recover(value)
-        case Right(value) => bind(value)
-      }
-    )
+    def redeemWith[B](recover: Throwable => IO[B], bind: A => IO[B]): IO[B] = attempt.flatMap{
+      case Left(value)  => recover(value)
+      case Right(value) => bind(value)
+    }
 
     def unsafeRunSync(): A = run()
 
