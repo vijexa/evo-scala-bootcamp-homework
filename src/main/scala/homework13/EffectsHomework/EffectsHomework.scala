@@ -1,10 +1,7 @@
 package homework13.EffectsHomework
 
 import scala.concurrent.Future
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
-import cats.effect.IO
+import scala.util.{Try, Success, Failure}
 
 /*
  * Homework 1. Provide your own implementation of a subset of `IO` functionality.

@@ -7,7 +7,6 @@ import matchers._
 import scala.util.{Success, Failure}
 
 import homework13.EffectsHomework.EffectsHomework.IO
-import scala.concurrent.Await
 
 class EffectsHomeworkSpec extends AnyFlatSpec with should.Matchers {
 
