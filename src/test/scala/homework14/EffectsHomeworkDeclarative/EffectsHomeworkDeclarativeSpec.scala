@@ -10,7 +10,7 @@ import homework14.EffectsHomeworkDeclarative.EffectsHomeworkDeclarative.IO
 
 class EffectsHomeworkDeclarativeSpec extends AnyFlatSpec with should.Matchers {
 
-  "IO execution" should "not blow up the stack" in {
+  "IO.map execution" should "not blow up the stack" in {
     val n = 100_000
 
     def makeLongIO(io: IO[Int], i: Int = 0): IO[Int] = 
@@ -19,7 +19,37 @@ class EffectsHomeworkDeclarativeSpec extends AnyFlatSpec with should.Matchers {
       else io
 
     val io = makeLongIO(IO.pure(0))
+
     io.unsafeRunSync() shouldBe n
+  }
+
+  "IO.flatMap execution" should "not blow up the stack" in {
+    val n = 100_000
+
+    def makeLongIO(io: IO[Int], i: Int = 0): IO[Int] = 
+      if (i < n) 
+        makeLongIO(io.flatMap(x => IO(x + 1)), i + 1)
+      else io
+
+    val io = makeLongIO(IO.pure(0))
+
+    io.unsafeRunSync() shouldBe n
+  }
+
+  "IO.attempt execution" should "not blow up the stack" ignore  {
+    val n = 100_000
+
+    def makeLongIO(io: IO[Int], i: Int = 0): IO[Int] = 
+      if (i < n) 
+        makeLongIO(io.attempt.map{
+          case Right(value) => value + 1
+          case Left(exc)    => throw exc
+        }, i + 1)
+      else io
+
+    val io = makeLongIO(IO.pure(0))
+
+    io.unsafeRunSync() shouldBe (n * 2)
   }
 
   // IO companion object tests

@@ -2,7 +2,7 @@ package homework14.EffectsHomeworkDeclarative
 
 import scala.concurrent.Future
 import scala.util.{Try, Success, Failure}
-import cats.syntax.apply
+import scala.annotation.tailrec
 
 /*
  * Homework 1. Provide your own implementation of a subset of `IO` functionality.
@@ -41,12 +41,35 @@ object EffectsHomeworkDeclarative {
 
   class IO[A] {
 
-    private def interpret[A] (io: IO[A]): A = {
+    sealed trait Trampoline[+A] {
+      def flatMap[B](f: A => Trampoline[B]): Trampoline[B] = MoreMap(this, f)
+    }
+
+    case class Done[+A] (v: A) extends Trampoline[A]
+    case class More[+A] (next: () => Trampoline[A]) extends Trampoline[A]
+    case class MoreMap[A, B] (sub: Trampoline[A], f: A => Trampoline[B]) extends Trampoline[B]
+
+    private def interpret[A] (io: IO[A]): Trampoline[A] = {
       io match {
-        case Delay(f)       => f()
-        case Suspend(f)     => interpret(f())
-        case Map(f, io)     => f(interpret(io))
-        case FlatMap(f, io) => interpret(f(interpret(io)))
+        case Delay(f)       => Done(f())
+        case Suspend(f)     => More(() => interpret(f()))
+        case Map(f, io)     => MoreMap(More(() => interpret(io)), (v: Any) => Done(f(v)))
+        case FlatMap(f, io) => MoreMap(More(() => interpret(io)), (v: Any) => interpret(f(v)))
+      }
+    }
+
+    @tailrec
+    private def runTrampolined[A](tramp: Trampoline[A] = More(() => interpret(this))): A = {
+      tramp match {
+        case Done(v)    => v
+        case More(next) => runTrampolined(next())
+        case MoreMap(sub, f1) => sub match {
+          case Done(v) => runTrampolined(f1(v))
+          case More(next) => runTrampolined(MoreMap(next(), f1))
+          case MoreMap(sub, f2) => runTrampolined(
+            sub.flatMap(f2(_).flatMap(f1))
+          )
+        }
       }
     }
 
@@ -61,7 +84,9 @@ object EffectsHomeworkDeclarative {
 
     def void: IO[Unit] = map(_ => ())
 
-    def attempt: IO[Either[Throwable, A]] = IO(Try(interpret(this)).toEither)
+    type ThrowableOrA[A] = Either[Throwable, A]
+
+    def attempt: IO[Either[Throwable, A]] = IO(Try(unsafeRunSync()).toEither)
 
     def option: IO[Option[A]] = redeem(_ => None, Some(_))
 
@@ -74,7 +99,7 @@ object EffectsHomeworkDeclarative {
     def redeemWith[B](recover: Throwable => IO[B], bind: A => IO[B]): IO[B] = 
       attempt.flatMap(_.fold(recover, bind))
 
-    def unsafeRunSync(): A = interpret(this)
+    def unsafeRunSync(): A = runTrampolined()
 
     def unsafeToFuture(): Future[A] = 
       Future(unsafeRunSync())(scala.concurrent.ExecutionContext.global)
