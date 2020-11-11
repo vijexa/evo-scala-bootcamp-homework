@@ -2,6 +2,7 @@ package homework14.EffectsHomeworkDeclarative
 
 import scala.concurrent.Future
 import scala.util.{Try, Success, Failure}
+import cats.syntax.apply
 
 /*
  * Homework 1. Provide your own implementation of a subset of `IO` functionality.
@@ -37,8 +38,6 @@ object EffectsHomeworkDeclarative {
   final case class Map[A, B] (f: A => B, io: IO[A]) extends PrimitiveOp[B]
   
   final case class FlatMap[A, B] (f: A => IO[B], io: IO[A]) extends PrimitiveOp[B]
-  
-  final case class Attempt[A] (io: IO[A]) extends PrimitiveOp[A]
 
 
 
@@ -50,7 +49,6 @@ object EffectsHomeworkDeclarative {
         case Suspend(f)     => interpret(f())
         case Map(f, io)     => f(interpret(io))
         case FlatMap(f, io) => interpret(f(interpret(io)))
-        case Attempt(io)    => ???
       }
     }
 
@@ -69,24 +67,19 @@ object EffectsHomeworkDeclarative {
 
     def option: IO[Option[A]] = redeem(_ => None, Some(_))
 
-    def handleErrorWith[AA >: A](f: Throwable => IO[AA]): IO[AA] = attempt.flatMap{
-      case Left(value)  => f(value)
-      case Right(value) => IO(value)
-    }
+    def handleErrorWith[AA >: A](f: Throwable => IO[AA]): IO[AA] = 
+      attempt.flatMap(_.fold(f, IO.apply(_)))
 
-    def redeem[B](recover: Throwable => B, map: A => B): IO[B] = attempt.map{
-      case Left(value)  => recover(value)
-      case Right(value) => map(value)
-    }
+    def redeem[B](recover: Throwable => B, map: A => B): IO[B] = 
+      attempt.map(_.fold(recover, map))
 
-    def redeemWith[B](recover: Throwable => IO[B], bind: A => IO[B]): IO[B] = attempt.flatMap{
-      case Left(value)  => recover(value)
-      case Right(value) => bind(value)
-    }
+    def redeemWith[B](recover: Throwable => IO[B], bind: A => IO[B]): IO[B] = 
+      attempt.flatMap(_.fold(recover, bind))
 
     def unsafeRunSync(): A = interpret(this)
 
-    def unsafeToFuture(): Future[A] = Future(unsafeRunSync())(scala.concurrent.ExecutionContext.global)
+    def unsafeToFuture(): Future[A] = 
+      Future(unsafeRunSync())(scala.concurrent.ExecutionContext.global)
   }
 
   object IO {
@@ -98,20 +91,14 @@ object EffectsHomeworkDeclarative {
 
     def pure[A](a: A): IO[A] = IO(a)
 
-    def fromEither[A](e: Either[Throwable, A]): IO[A] = e match {
-      case Left(err)    => raiseError(err)
-      case Right(value) => IO(value)
-    }
+    def fromEither[A](e: Either[Throwable, A]): IO[A] = 
+      e.fold(raiseError, apply(_))
 
-    def fromOption[A](option: Option[A])(orElse: => Throwable): IO[A] = option match {
-      case Some(value) => IO(value)
-      case None        => raiseError(orElse)
-    }
+    def fromOption[A](option: Option[A])(orElse: => Throwable): IO[A] = 
+      option.fold(raiseError[A](orElse))(apply(_))
 
-    def fromTry[A](t: Try[A]): IO[A] = t match {
-      case Failure(exception) => raiseError(exception)
-      case Success(value)     => IO(value)
-    }
+    def fromTry[A](t: Try[A]): IO[A] = 
+      t.fold(raiseError, apply(_))
 
     def none[A]: IO[Option[A]] = pure(None)
 
