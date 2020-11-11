@@ -30,7 +30,7 @@ object EffectsHomework {
   final class IO[A] private (private val run: () => A) {
     def map[B](f: A => B): IO[B] = IO(f(run()))
 
-    def flatMap[B](f: A => IO[B]): IO[B] = f(run())
+    def flatMap[B](f: A => IO[B]): IO[B] = IO.suspend(f(run()))
 
     def *>[B](another: IO[B]): IO[B] = map(_ => another.run())
 
