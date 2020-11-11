@@ -49,7 +49,7 @@ class EffectsHomeworkDeclarativeSpec extends AnyFlatSpec with should.Matchers {
 
     val io = makeLongIO(IO.pure(0))
 
-    io.unsafeRunSync() shouldBe (n * 2)
+    io.unsafeRunSync() shouldBe n
   }
 
   // IO companion object tests
