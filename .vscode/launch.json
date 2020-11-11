@@ -66,5 +66,11 @@
             "name": "homework13",
             "testClass": "homework13.EffectsHomework.EffectsHomeworkSpec"
         },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "homework14",
+            "testClass": "homework14.EffectsHomeworkDeclarative.EffectsHomeworkDeclarativeSpec"
+        },
     ]
 }
