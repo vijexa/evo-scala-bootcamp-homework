@@ -29,22 +29,20 @@ import cats.syntax.apply
  */
 object EffectsHomeworkDeclarative {
 
-  sealed trait PrimitiveOp[A]
+  final case class Delay[A] (f: () => A) extends IO[A]
 
-  final case class Delay[A] (f: () => A) extends PrimitiveOp[A]
+  final case class Suspend[A] (f: () => IO[A]) extends IO[A]
 
-  final case class Suspend[A] (f: () => IO[A]) extends PrimitiveOp[A]
-
-  final case class Map[A, B] (f: A => B, io: IO[A]) extends PrimitiveOp[B]
+  final case class Map[A, B] (f: A => B, io: IO[A]) extends IO[B]
   
-  final case class FlatMap[A, B] (f: A => IO[B], io: IO[A]) extends PrimitiveOp[B]
+  final case class FlatMap[A, B] (f: A => IO[B], io: IO[A]) extends IO[B]
 
 
 
-  final class IO[A] private (private val operation: PrimitiveOp[A]) {
+  class IO[A] {
 
     private def interpret[A] (io: IO[A]): A = {
-      io.operation match {
+      io match {
         case Delay(f)       => f()
         case Suspend(f)     => interpret(f())
         case Map(f, io)     => f(interpret(io))
@@ -53,9 +51,9 @@ object EffectsHomeworkDeclarative {
     }
 
 
-    def map[B](f: A => B): IO[B] = new IO(Map(f, this))
+    def map[B](f: A => B): IO[B] = Map(f, this)
 
-    def flatMap[B](f: A => IO[B]): IO[B] = new IO(FlatMap(f, this))
+    def flatMap[B](f: A => IO[B]): IO[B] = FlatMap(f, this)
 
     def *>[B](another: IO[B]): IO[B] = flatMap(_ => another)
 
@@ -85,9 +83,9 @@ object EffectsHomeworkDeclarative {
   object IO {
     def apply[A](body: => A): IO[A] = delay(body)
     
-    def suspend[A](thunk: => IO[A]): IO[A] = new IO(Suspend(() => thunk))
+    def suspend[A](thunk: => IO[A]): IO[A] = Suspend(() => thunk)
 
-    def delay[A](body: => A): IO[A] = new IO(Delay(() => body))
+    def delay[A](body: => A): IO[A] = Delay(() => body)
 
     def pure[A](a: A): IO[A] = IO(a)
 
