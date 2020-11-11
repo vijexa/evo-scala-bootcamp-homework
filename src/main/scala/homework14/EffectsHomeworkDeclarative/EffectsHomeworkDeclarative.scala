@@ -41,12 +41,12 @@ object EffectsHomeworkDeclarative {
 
   class IO[A] {
 
-    sealed trait Trampoline[+A] {
+    sealed trait Trampoline[A] {
       def flatMap[B](f: A => Trampoline[B]): Trampoline[B] = MoreMap(this, f)
     }
 
-    case class Done[+A] (v: A) extends Trampoline[A]
-    case class More[+A] (next: () => Trampoline[A]) extends Trampoline[A]
+    case class Done[A] (v: A) extends Trampoline[A]
+    case class More[A] (next: () => Trampoline[A]) extends Trampoline[A]
     case class MoreMap[A, B] (sub: Trampoline[A], f: A => Trampoline[B]) extends Trampoline[B]
 
     private def interpret[A] (io: IO[A]): Trampoline[A] = {
