@@ -54,9 +54,12 @@ object EffectsHomeworkDeclarative {
         }
       }
     }
+
   }
 
 
+
+  private final case class Pure[A] (v: A) extends IO[A]
   
   private final case class Delay[A] (f: () => A) extends IO[A]
 
@@ -106,6 +109,7 @@ object EffectsHomeworkDeclarative {
     private def interpret[A] (io: IO[A]): Trampoline[A] = {
       import Trampoline._
       io match {
+        case Pure(v)        => Done(v)
         case Delay(f)       => Done(f())
         case Suspend(f)     => More(() => interpret(f()))
         case Map(f, io)     => MoreMap(More(() => interpret(io)), (v: Any) => Done(f(v)))
@@ -123,7 +127,7 @@ object EffectsHomeworkDeclarative {
 
     def delay[A](body: => A): IO[A] = Delay(() => body)
 
-    def pure[A](a: A): IO[A] = IO(a)
+    def pure[A](a: A): IO[A] = Pure(a)
 
     def fromEither[A](e: Either[Throwable, A]): IO[A] = 
       e.fold(raiseError, apply(_))
