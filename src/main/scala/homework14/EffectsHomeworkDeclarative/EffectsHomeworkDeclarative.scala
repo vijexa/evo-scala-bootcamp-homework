@@ -3,7 +3,6 @@ package homework14.EffectsHomeworkDeclarative
 import scala.concurrent.Future
 import scala.util.{Try, Success, Failure}
 import scala.annotation.tailrec
-import cats.effect.IO
 
 /*
  * Homework 1. Provide your own implementation of a subset of `IO` functionality.
@@ -30,43 +29,19 @@ import cats.effect.IO
  */
 object EffectsHomeworkDeclarative {
 
-  final case class Delay[A] (f: () => A) extends IO[A]
+  private sealed trait Trampoline[A] {
+    def flatMap[B](f: A => Trampoline[B]): Trampoline[B] = Trampoline.MoreMap(this, f)
+  }
 
-  final case class Suspend[A] (f: () => IO[A]) extends IO[A]
+  private object Trampoline {
 
-  final case class Map[A, B] (f: A => B, io: IO[A]) extends IO[B]
-  
-  final case class FlatMap[A, B] (f: A => IO[B], io: IO[A]) extends IO[B]
+    final case class Done[A] (v: A) extends Trampoline[A]
+    final case class More[A] (next: () => Trampoline[A]) extends Trampoline[A]
+    final case class MoreMap[A, B] (sub: Trampoline[A], f: A => Trampoline[B]) extends Trampoline[B]
 
-  final case class Attempt[A] (io: IO[A]) extends IO[Either[Throwable, A]]
-
-
-  
-  class IO[A] {
-
-    sealed trait Trampoline[A] {
-      def flatMap[B](f: A => Trampoline[B]): Trampoline[B] = MoreMap(this, f)
-    }
-
-    case class Done[A] (v: A) extends Trampoline[A]
-    case class More[A] (next: () => Trampoline[A]) extends Trampoline[A]
-    case class MoreMap[A, B] (sub: Trampoline[A], f: A => Trampoline[B]) extends Trampoline[B]
-
-    private def interpret[A] (io: IO[A]): Trampoline[A] = {
-      io match {
-        case Delay(f)       => Done(f())
-        case Suspend(f)     => More(() => interpret(f()))
-        case Map(f, io)     => MoreMap(More(() => interpret(io)), (v: Any) => Done(f(v)))
-        case FlatMap(f, io) => MoreMap(More(() => interpret(io)), (v: Any) => interpret(f(v)))
-        case Attempt(io)    => Try(interpret(io)) match {
-          case Failure(exception) => Done(Left(exception))
-          case Success(value) => MoreMap(value, (v: Any) => Done(Right(v)))
-        }
-      }
-    }
 
     @tailrec
-    private def runTrampolined[A](tramp: Trampoline[A] = More(() => interpret(this))): A = {
+    def runTrampolined[A](tramp: Trampoline[A]): A = {
       tramp match {
         case Done(v) => v 
         case More(next) => runTrampolined(next())
@@ -79,7 +54,35 @@ object EffectsHomeworkDeclarative {
         }
       }
     }
+  }
 
+
+  
+  private final case class Delay[A] (f: () => A) extends IO[A]
+
+  private final case class Suspend[A] (f: () => IO[A]) extends IO[A]
+
+  private final case class Map[A, B] (f: A => B, io: IO[A]) extends IO[B]
+  
+  private final case class FlatMap[A, B] (f: A => IO[B], io: IO[A]) extends IO[B]
+
+  private final case class Attempt[A] (io: IO[A]) extends IO[Either[Throwable, A]]
+
+  class IO[A] {
+
+    private def interpret[A] (io: IO[A]): Trampoline[A] = {
+      import Trampoline._
+      io match {
+        case Delay(f)       => Done(f())
+        case Suspend(f)     => More(() => interpret(f()))
+        case Map(f, io)     => MoreMap(More(() => interpret(io)), (v: Any) => Done(f(v)))
+        case FlatMap(f, io) => MoreMap(More(() => interpret(io)), (v: Any) => interpret(f(v)))
+        case Attempt(io)    => Try(interpret(io)) match {
+          case Failure(exception) => Done(Left(exception))
+          case Success(value) => MoreMap(value, (v: Any) => Done(Right(v)))
+        }
+      }
+    }
 
     def map[B](f: A => B): IO[B] = Map(f, this)
 
@@ -104,11 +107,13 @@ object EffectsHomeworkDeclarative {
     def redeemWith[B](recover: Throwable => IO[B], bind: A => IO[B]): IO[B] = 
       attempt.flatMap(_.fold(recover, bind))
 
-    def unsafeRunSync(): A = runTrampolined()
+    def unsafeRunSync(): A = Trampoline.runTrampolined(interpret(this))
 
     def unsafeToFuture(): Future[A] = 
       Future(unsafeRunSync())(scala.concurrent.ExecutionContext.global)
   }
+
+
 
   object IO {
     def apply[A](body: => A): IO[A] = delay(body)
