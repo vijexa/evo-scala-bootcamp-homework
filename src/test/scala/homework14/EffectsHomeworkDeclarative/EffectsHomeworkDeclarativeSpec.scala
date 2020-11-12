@@ -36,7 +36,7 @@ class EffectsHomeworkDeclarativeSpec extends AnyFlatSpec with should.Matchers {
     io.unsafeRunSync() shouldBe n
   }
 
-  "IO.attempt execution" should "not blow up the stack" ignore  {
+  "IO.attempt execution" should "not blow up the stack" in  {
     val n = 100_000
 
     def makeLongIO(io: IO[Int], i: Int = 0): IO[Int] = 

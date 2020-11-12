@@ -3,6 +3,7 @@ package homework14.EffectsHomeworkDeclarative
 import scala.concurrent.Future
 import scala.util.{Try, Success, Failure}
 import scala.annotation.tailrec
+import cats.effect.IO
 
 /*
  * Homework 1. Provide your own implementation of a subset of `IO` functionality.
@@ -37,8 +38,10 @@ object EffectsHomeworkDeclarative {
   
   final case class FlatMap[A, B] (f: A => IO[B], io: IO[A]) extends IO[B]
 
+  final case class Attempt[A] (io: IO[A]) extends IO[Either[Throwable, A]]
 
 
+  
   class IO[A] {
 
     sealed trait Trampoline[A] {
@@ -55,13 +58,17 @@ object EffectsHomeworkDeclarative {
         case Suspend(f)     => More(() => interpret(f()))
         case Map(f, io)     => MoreMap(More(() => interpret(io)), (v: Any) => Done(f(v)))
         case FlatMap(f, io) => MoreMap(More(() => interpret(io)), (v: Any) => interpret(f(v)))
+        case Attempt(io)    => Try(interpret(io)) match {
+          case Failure(exception) => Done(Left(exception))
+          case Success(value) => MoreMap(value, (v: Any) => Done(Right(v)))
+        }
       }
     }
 
     @tailrec
     private def runTrampolined[A](tramp: Trampoline[A] = More(() => interpret(this))): A = {
       tramp match {
-        case Done(v)    => v
+        case Done(v) => v 
         case More(next) => runTrampolined(next())
         case MoreMap(sub, f1) => sub match {
           case Done(v) => runTrampolined(f1(v))
@@ -84,9 +91,7 @@ object EffectsHomeworkDeclarative {
 
     def void: IO[Unit] = map(_ => ())
 
-    type ThrowableOrA[A] = Either[Throwable, A]
-
-    def attempt: IO[Either[Throwable, A]] = IO(Try(unsafeRunSync()).toEither)
+    def attempt: IO[Either[Throwable, A]] = Attempt(this)
 
     def option: IO[Option[A]] = redeem(_ => None, Some(_))
 
