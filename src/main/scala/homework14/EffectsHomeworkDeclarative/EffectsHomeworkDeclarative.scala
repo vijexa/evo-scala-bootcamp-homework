@@ -70,20 +70,6 @@ object EffectsHomeworkDeclarative {
 
   class IO[A] {
 
-    private def interpret[A] (io: IO[A]): Trampoline[A] = {
-      import Trampoline._
-      io match {
-        case Delay(f)       => Done(f())
-        case Suspend(f)     => More(() => interpret(f()))
-        case Map(f, io)     => MoreMap(More(() => interpret(io)), (v: Any) => Done(f(v)))
-        case FlatMap(f, io) => MoreMap(More(() => interpret(io)), (v: Any) => interpret(f(v)))
-        case Attempt(io)    => Try(interpret(io)) match {
-          case Failure(exception) => Done(Left(exception))
-          case Success(value) => MoreMap(value, (v: Any) => Done(Right(v)))
-        }
-      }
-    }
-
     def map[B](f: A => B): IO[B] = Map(f, this)
 
     def flatMap[B](f: A => IO[B]): IO[B] = FlatMap(f, this)
@@ -107,7 +93,7 @@ object EffectsHomeworkDeclarative {
     def redeemWith[B](recover: Throwable => IO[B], bind: A => IO[B]): IO[B] = 
       attempt.flatMap(_.fold(recover, bind))
 
-    def unsafeRunSync(): A = Trampoline.runTrampolined(interpret(this))
+    def unsafeRunSync(): A = Trampoline.runTrampolined(IO.interpret(this))
 
     def unsafeToFuture(): Future[A] = 
       Future(unsafeRunSync())(scala.concurrent.ExecutionContext.global)
@@ -116,6 +102,21 @@ object EffectsHomeworkDeclarative {
 
 
   object IO {
+
+    private def interpret[A] (io: IO[A]): Trampoline[A] = {
+      import Trampoline._
+      io match {
+        case Delay(f)       => Done(f())
+        case Suspend(f)     => More(() => interpret(f()))
+        case Map(f, io)     => MoreMap(More(() => interpret(io)), (v: Any) => Done(f(v)))
+        case FlatMap(f, io) => MoreMap(More(() => interpret(io)), (v: Any) => interpret(f(v)))
+        case Attempt(io)    => Try(interpret(io)) match {
+          case Failure(exception) => Done(Left(exception))
+          case Success(value) => MoreMap(value, (v: Any) => Done(Right(v)))
+        }
+      }
+    }
+
     def apply[A](body: => A): IO[A] = delay(body)
     
     def suspend[A](thunk: => IO[A]): IO[A] = Suspend(() => thunk)
