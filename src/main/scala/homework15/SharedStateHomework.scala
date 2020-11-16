@@ -31,9 +31,27 @@ object SharedStateHomework extends IOApp {
     expiresIn: FiniteDuration
   ) extends Cache[F, K, V] {
 
+    def checkExpirationRepeatedly(
+      interval: FiniteDuration
+    )(
+      implicit T: Timer[F], C: Concurrent[F]
+    ): F[Unit] = {
+      state.update(
+        _.collect{
+          case (key, (exp, value)) if exp > 0 => (key, (exp - interval.length, value))
+        }
+      ) >> T.sleep(interval).flatMap(
+        _ => checkExpirationRepeatedly(interval)(T, C)
+      )
+    }
+
     def get(key: K): F[Option[V]] = state.get.map(_.get(key).map{case (_, v) => v})
 
-    def put(key: K, value: V): F[Unit] = state.modify(m => (m + (key -> (expiresIn.length -> value)), ()))
+    def put(key: K, value: V): F[Unit] = state.update(
+      m => (
+        m + (key -> (expiresIn.length -> value))
+      )
+    )
 
   }
 
@@ -41,7 +59,8 @@ object SharedStateHomework extends IOApp {
     def of[F[_] : Clock, K, V](
       expiresIn: FiniteDuration,
       checkOnExpirationsEvery: FiniteDuration
-    )(implicit T: Timer[F], C: Concurrent[F]): F[Cache[F, K, V]] = 
+    )(implicit T: Timer[F], C: Concurrent[F]): F[Cache[F, K, V]] = {
+
       C.delay(
         new RefCache[F, K, V](
           Ref.unsafe[
@@ -50,14 +69,24 @@ object SharedStateHomework extends IOApp {
           ](Map.empty),
           expiresIn
         )
+      ).flatMap(
+        cache => {
+          C.start(
+            cache.checkExpirationRepeatedly(
+              checkOnExpirationsEvery
+            )(T, C)
+          ) as cache
+        }
       )
+    }
+      
 
   }
 
   override def run(args: List[String]): IO[ExitCode] = {
 
     for {
-      cache <- Cache.of[IO, Int, String](10.seconds, 4.seconds)
+      cache <- Cache.of[IO, Int, String](6.seconds, 1.seconds)
       _ <- cache.put(1, "Hello")
       _ <- cache.put(2, "World")
       _ <- cache.get(1).flatMap(s => IO {
@@ -66,14 +95,14 @@ object SharedStateHomework extends IOApp {
       _ <- cache.get(2).flatMap(s => IO {
         println(s"second key $s")
       })
-      _ <- IO.sleep(12.seconds)
+      _ <- IO.sleep(4.seconds)
       _ <- cache.get(1).flatMap(s => IO {
         println(s"first key $s")
       })
       _ <- cache.get(2).flatMap(s => IO {
         println(s"second key $s")
       })
-      _ <- IO.sleep(12.seconds)
+      _ <- IO.sleep(4.seconds)
       _ <- cache.get(1).flatMap(s => IO {
         println(s"first key $s")
       })
