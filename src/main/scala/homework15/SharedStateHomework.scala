@@ -24,6 +24,8 @@ object SharedStateHomework extends IOApp {
     def get(key: K): F[Option[V]]
 
     def put(key: K, value: V): F[Unit]
+
+    def remove(key: K): F[Unit]
   }
 
   class RefCache[F[_] : Clock : Monad, K, V](
@@ -50,6 +52,12 @@ object SharedStateHomework extends IOApp {
     def put(key: K, value: V): F[Unit] = state.update(
       m => (
         m + (key -> (expiresIn.length -> value))
+      )
+    )
+
+    def remove(key: K): F[Unit] = state.update(
+      m => (
+        m.removed(key)
       )
     )
 
