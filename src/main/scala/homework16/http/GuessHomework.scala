@@ -115,15 +115,16 @@ object GuessServer extends IOApp {
     
     HttpRoutes.of[IO] {
       case GET -> Root / "start" :? MinNumMatcher(minNum) :? MaxNumMatcher(maxNum) :? AttemptsMatcher(attempts) => {
-        val id = UUID.randomUUID().toString
-        val number = scala.util.Random.between(minNum, maxNum)
-
-        clients.put(id, GameStatus(attempts, number)) *>
-        Ok(
-          GameStartJson(s"Your new id is $id, write it down! (in your 🍪 pls)\n" +
-          s"Your number is between $minNum and $maxNum. You have $attempts attempts\n" +
-          s"You'll lose if you are inactive for 10 minutes!\n$number").asJson
-        ).map(_.addCookie("id", id))
+        for {
+          id       <- IO(UUID.randomUUID().toString)
+          number   <- IO(scala.util.Random.between(minNum, maxNum))
+          _        <- clients.put(id, GameStatus(attempts, number))
+          response <- Ok(
+            GameStartJson(s"Your new id is $id, write it down! (in your 🍪 pls)\n" +
+            s"Your number is between $minNum and $maxNum. You have $attempts attempts\n" +
+            s"You'll lose if you are inactive for 10 minutes!").asJson
+          )
+        } yield response.addCookie("id", id)
       }
     }
   }
