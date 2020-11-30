@@ -13,9 +13,7 @@ object BinaryTreeNode {
 
 final class BinaryTreeNode(val elem: Int, initiallyRemoved: Boolean) extends Actor {
   import BinaryTreeNode._
-  import BinaryTreeSet._
-  import BinaryTreeSet.Operation._
-  import BinaryTreeSet.OperationReply._
+  import BinaryTreeSet._, Operation._, OperationReply._
 
   private var subtrees = Map[Position, ActorRef]()
   private var removed = initiallyRemoved
@@ -28,14 +26,17 @@ final class BinaryTreeNode(val elem: Int, initiallyRemoved: Boolean) extends Act
 
   def finish(op: Operation) = op.requester ! OperationFinished(op.id)
 
-  private def getNextNode(nextElem: Int) = {
+  private def forwardToNextNodeOr(m: Operation, onNone: Position => Unit) = {
     val nextPos = 
-      if (nextElem > elem) 
+      if (m.elem > elem) 
         Right
       else 
         Left
     
-    (nextPos -> subtrees.get(nextPos))
+    subtrees.get(nextPos) match {
+      case Some(nextRef) => nextRef ! m
+      case None => onNone(nextPos)
+    }
   }
 
   private def doInsert(m: Insert): Unit = {
@@ -43,13 +44,11 @@ final class BinaryTreeNode(val elem: Int, initiallyRemoved: Boolean) extends Act
       removed = false
       finish(m)
     } else {
-      getNextNode(m.elem) match {
-        case (_, Some(nextRef)) => nextRef ! m
-        case (pos, None) => 
-          val newNode = context.actorOf(props(m.elem, false))
-          subtrees += (pos -> newNode)
-          finish(m)
-      }
+      forwardToNextNodeOr(m, { pos =>
+        val newNode = context.actorOf(props(m.elem, false))
+        subtrees += (pos -> newNode)
+        finish(m)
+      })
     }
   }
 
@@ -57,10 +56,7 @@ final class BinaryTreeNode(val elem: Int, initiallyRemoved: Boolean) extends Act
     if(m.elem == elem) {
       m.requester ! ContainsResult(m.id, !removed)
     } else {
-      getNextNode(m.elem) match {
-        case (_, Some(nextRef)) => nextRef ! m
-        case (_, None) => m.requester ! ContainsResult(m.id, false)
-      }
+      forwardToNextNodeOr(m, _ => m.requester ! ContainsResult(m.id, false))
     }
   }
 
@@ -69,10 +65,7 @@ final class BinaryTreeNode(val elem: Int, initiallyRemoved: Boolean) extends Act
       removed = true
       finish(m)
     } else {
-      getNextNode(m.elem) match {
-        case (_, Some(nextRef)) => nextRef ! m
-        case (_, None) => finish(m)
-      }
+      forwardToNextNodeOr(m, _ => finish(m))
     }
   }
 }
