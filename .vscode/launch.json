@@ -72,5 +72,11 @@
             "name": "homework14",
             "testClass": "homework14.EffectsHomeworkDeclarative.EffectsHomeworkDeclarativeSpec"
         },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "homework18",
+            "testClass": "homework18.BinaryTreeSpec"
+        },
     ]
 }
